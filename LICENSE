@@ -1,0 +1,33 @@
+Business Source License 1.1
+
+Copyright (c) 2025 Naylence.
+"Business Source License" and "BSL" are trademarks of MariaDB plc.
+
+Terms:
+
+The Licensor hereby grants you the right to copy, modify, create derivative works, redistribute, and make **non-production** use of the Licensed Work.
+
+Additional Use Grant:
+Production use is permitted **only for internal use by Naylence staff**; all other production usage requires a commercial license granted by Naylence Inc.
+
+Change Date:
+On 2028-08-14, in accordance with the Business Source License, this software will be licensed under the Apache License, Version 2.0 with no additional restrictions.
+
+Change License:
+Apache License, Version 2.0 (SPDX identifier: `Apache-2.0`).
+
+If your use does not comply with current terms, you must obtain a commercial license or refrain from using the software.
+
+You must conspicuously display this License on each original or modified copy. Violation terminates your rights under this License.
+
+This License does not grant you rights to any Naylence trademarks or logos.
+
+TO THE EXTENT PERMITTED BY LAW, THE LICENSED WORK IS PROVIDED “AS IS,” WITHOUT WARRANTY. LICENSOR DISCLAIMS ALL WARRANTIES, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND TITLE.
+
+MariaDB hereby permits you to use this License’s text to license your works as long as you comply with its covenants.
+
+Covenants of Licensor:
+1. Change License is Apache-2.0.
+2. Additional Use Grant specified above.
+3. Change Date specified above.
+4. License not otherwise modified.
