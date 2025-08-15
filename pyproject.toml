@@ -122,11 +122,11 @@ build-backend = "poetry.core.masonry.api"
 X25519EncryptionManager = "naylence.fame.security.encryption.sealed.x25519_encryption_manager_factory:X25519EncryptionManagerFactory"
 ChannelEncryptionManager = "naylence.fame.security.encryption.channel.channel_encryption_manager_factory:ChannelEncryptionManagerFactory"
 
-#[project.entry-points."naylence.SecureChannelManagerFactory"]
-#DefaultSecureChannelManager = "naylence.fame.security.encryption.default_secure_channel_manager_factory:DefaultSecureChannelManagerFactory"
+[project.entry-points."naylence.SecureChannelManagerFactory"]
+DefaultSecureChannelManager = "naylence.fame.security.encryption.default_secure_channel_manager_factory:DefaultSecureChannelManagerFactory"
 
-#[project.entry-points."naylence.CertificateManagerFactory"]
-#DefaultCertificateManager = "naylence.fame.security.cert.default_certificate_manager_factory:DefaultCertificateManagerFactory"
+[project.entry-points."naylence.CertificateManagerFactory"]
+DefaultCertificateManager = "naylence.fame.security.cert.default_certificate_manager_factory:DefaultCertificateManagerFactory"
 
 [project.entry-points."naylence.AttachmentKeyValidatorFactory"]
 AttachmentCertValidator = "naylence.fame.security.cert.attachment_cert_validator_factory:AttachmentCertValidatorFactory"
