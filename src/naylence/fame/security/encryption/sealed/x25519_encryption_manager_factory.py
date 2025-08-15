@@ -1,7 +1,6 @@
 from typing import Any, List, Optional
 
 from naylence.fame.security.crypto.providers.crypto_provider import CryptoProvider
-
 from naylence.fame.security.encryption.encryption_manager import (
     EncryptionManager,
     EncryptionManagerConfig,
