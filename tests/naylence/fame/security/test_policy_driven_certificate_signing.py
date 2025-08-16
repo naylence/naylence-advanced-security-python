@@ -12,7 +12,7 @@ async def test_policy_driven_certificate_signing():
         OutboundSigningRules,
         SignaturePolicy,
         SigningConfig,
-    )
+    , SigningMaterial)
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
     from naylence.fame.security.signing.eddsa_envelope_signer import EdDSAEnvelopeSigner
     from naylence.fame.security.signing.eddsa_envelope_verifier import EdDSAEnvelopeVerifier
@@ -34,7 +34,7 @@ async def test_policy_driven_certificate_signing():
 
         assert signer_config.signing_material == SigningMaterial.RAW_KEY, (
             "Default policy should use RAW_KEY"
-        )
+        , SigningMaterial)
 
     if default_security.envelope_verifier:
         assert isinstance(default_security.envelope_verifier, EdDSAEnvelopeVerifier)
@@ -148,7 +148,7 @@ def test_envelope_signing_with_certificates():
     from naylence.fame.security.policy.security_policy import SigningConfig, SigningMaterial
     from naylence.fame.security.signing.eddsa_envelope_signer import EdDSAEnvelopeSigner
 
-    print("=== Testing Envelope Signing with Certificates ===\n")
+    print("=== Testing Envelope Signing with Certificates ===\n", SigningMaterial)
 
     crypto_provider = get_crypto_provider()
 

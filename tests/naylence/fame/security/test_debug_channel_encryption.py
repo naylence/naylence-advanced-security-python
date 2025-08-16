@@ -34,6 +34,16 @@ logger = getLogger(__name__)
 class DebugChannelEncryptionPolicy(DefaultSecurityPolicy):
     """Security policy that enables channel encryption with debug logging."""
 
+    def __init__(self):
+        # Create policy that requires channel encryption to trigger creation of encryption managers
+        from naylence.fame.security.policy.security_policy import EncryptionConfig, OutboundCryptoRules, CryptoLevel
+        
+        super().__init__(
+            encryption=EncryptionConfig(
+                outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
+            )
+        )
+
     def should_use_channel_encryption(self, envelope: FameEnvelope, context: FameDeliveryContext) -> bool:
         """Enable channel encryption for all local DataFrames."""
         from naylence.fame.core import DeliveryOriginType

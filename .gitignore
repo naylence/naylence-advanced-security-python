@@ -9,6 +9,7 @@ __pycache__
 .hypothesis
 .coverage
 coverage.xml
+htmlcov
 
 docs/
 examples/

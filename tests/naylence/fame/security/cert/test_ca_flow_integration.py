@@ -23,7 +23,7 @@ async def test_root_node_ca_certificate_flow():
         from naylence.fame.security.policy.security_policy import SigningConfig, SigningMaterial
         from naylence.fame.security.security_manager_factory import SecurityManagerFactory
 
-        print("1. Creating root node with X509_CHAIN signing material...")
+        print("1. Creating root node with X509_CHAIN signing material...", SigningMaterial)
 
         # Create a simple policy that requires X509_CHAIN
         class TestPolicy:
@@ -33,7 +33,7 @@ async def test_root_node_ca_certificate_flow():
             def requirements(self):
                 from naylence.fame.security.policy.security_policy import SecurityRequirements
 
-                return SecurityRequirements()
+                return SecurityRequirements(, SigningMaterial)
 
         # Create security manager with X509_CHAIN requirement
         security_manager = await SecurityManagerFactory.create_security_manager(TestPolicy())
@@ -222,7 +222,7 @@ async def test_root_node_raw_key_no_certificate_flow():
         from naylence.fame.security.policy.security_policy import SigningConfig, SigningMaterial
         from naylence.fame.security.security_manager_factory import SecurityManagerFactory
 
-        print("1. Creating root node with RAW_KEY signing material...")
+        print("1. Creating root node with RAW_KEY signing material...", SigningMaterial)
 
         # Create a simple policy that uses RAW_KEY (default)
         class TestPolicy:
@@ -232,7 +232,7 @@ async def test_root_node_raw_key_no_certificate_flow():
             def requirements(self):
                 from naylence.fame.security.policy.security_policy import SecurityRequirements
 
-                return SecurityRequirements()
+                return SecurityRequirements(, SigningMaterial)
 
         # Create security manager with RAW_KEY (should not create certificate manager)
         security_manager = await SecurityManagerFactory.create_security_manager(TestPolicy())

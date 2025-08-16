@@ -17,14 +17,28 @@ class TestPolicyDrivenSecurityArchitecture:
     @pytest.mark.asyncio
     async def test_node_security_single_bundle_for_crypto_primitives(self):
         """Test that SecurityManager is the single bundle for appropriate crypto primitives."""
-        # Create a security bundle
-        security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        # Create a security bundle with a policy that requires security components
+        from naylence.fame.security.policy.security_policy import (
+            SigningConfig, OutboundSigningRules, EncryptionConfig, OutboundCryptoRules, CryptoLevel
+        )
+        
+        # Create a policy that actually requires security components
+        policy_with_requirements = DefaultSecurityPolicy(
+            signing=SigningConfig(
+                outbound=OutboundSigningRules(default_signing=True)
+            ),
+            encryption=EncryptionConfig(
+                outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
+            )
+        )
+        
+        security = await SecurityManagerFactory.create_security_manager(policy_with_requirements)
 
         # Verify crypto primitives that can be auto-created are bundled
         assert security.policy is not None
-        assert security.envelope_signer is not None
-        assert security.envelope_verifier is not None
-        # Encryption managers ARE auto-created when policy requires encryption and key manager is available
+        assert security.envelope_signer is not None  # Auto-created because signing required
+        assert security.envelope_verifier is not None  # Auto-created because verification required
+        # Encryption manager auto-created when policy requires encryption
         assert security.encryption is not None
 
         # Verify key manager is included when required by policy
@@ -33,12 +47,35 @@ class TestPolicyDrivenSecurityArchitecture:
 
         print("✓ SecurityManager provides single bundle for appropriate crypto primitives")
         print("✓ Encryption managers are auto-created when policy requires encryption")
+        
+        # Also test with default policy (should create nothing)
+        default_security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        assert default_security.policy is not None
+        assert default_security.envelope_signer is None  # Default policy doesn't require signing
+        assert default_security.envelope_verifier is None  # Default policy doesn't require verification
+        assert default_security.encryption is None  # Default policy doesn't require encryption
+        assert default_security.key_manager is None  # Default policy doesn't require key exchange
+        
+        print("✓ Default policy correctly creates no security components")
 
     @pytest.mark.asyncio
     async def test_key_management_policy_driven(self):
         """Test that key management is policy-driven."""
-        # Test with default policy (requires key exchange)
-        security_with_keys = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        # Test with default policy (does NOT require key exchange)
+        default_security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        assert default_security.policy.requirements().require_key_exchange is False
+        assert default_security.key_manager is None  # Not created because not required
+
+        # Test with policy that requires key exchange (signing requires key exchange)
+        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+        
+        signing_policy = DefaultSecurityPolicy(
+            signing=SigningConfig(
+                outbound=OutboundSigningRules(default_signing=True)
+            )
+        )
+        
+        security_with_keys = await SecurityManagerFactory.create_security_manager(signing_policy)
         assert security_with_keys.policy.requirements().require_key_exchange is True
         assert security_with_keys.key_manager is not None
 
@@ -49,6 +86,9 @@ class TestPolicyDrivenSecurityArchitecture:
 
         security_without_keys = await SecurityManagerFactory.create_security_manager(NoKeyExchangePolicy())
         assert security_without_keys.policy.requirements().require_key_exchange is False
+        assert security_without_keys.key_manager is None
+
+        print("✓ Key management is correctly policy-driven")
         assert security_without_keys.key_manager is None
 
         print("✓ Key management is policy-driven")
@@ -82,8 +122,16 @@ class TestPolicyDrivenSecurityArchitecture:
     @pytest.mark.asyncio
     async def test_fame_node_key_manager_priority(self):
         """Test FameNode key manager behavior with SecurityManager."""
-        # Test 1: node_security.key_manager is used when available
-        security_with_km = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        # Test 1: Create policy that requires key manager
+        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+        
+        policy_with_km = DefaultSecurityPolicy(
+            signing=SigningConfig(
+                outbound=OutboundSigningRules(default_signing=True)
+            )
+        )
+        
+        security_with_km = await SecurityManagerFactory.create_security_manager(policy_with_km)
 
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
 
@@ -95,13 +143,10 @@ class TestPolicyDrivenSecurityArchitecture:
             node_meta_store=node_meta_store,
         )
         assert node1._security_manager.key_manager is security_with_km.key_manager
+        assert node1._security_manager.key_manager is not None
 
-        # Test 2: Policy that doesn't require key exchange doesn't create key manager
-        class NoKMSecurityPolicy(DefaultSecurityPolicy):
-            def requirements(self) -> SecurityRequirements:
-                return SecurityRequirements(require_key_exchange=False)
-
-        security_without_km = await SecurityManagerFactory.create_security_manager(NoKMSecurityPolicy())
+        # Test 2: Default policy doesn't require key exchange, doesn't create key manager
+        security_without_km = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
         storage_provider2 = InMemoryStorageProvider()
         node_meta_store2 = InMemoryKVStore[NodeMeta](NodeMeta)
         node2 = FameNode(
@@ -116,8 +161,16 @@ class TestPolicyDrivenSecurityArchitecture:
     @pytest.mark.asyncio
     async def test_sentinel_delegates_to_security_architecture(self):
         """Test that Sentinel delegates all security setup to the architecture."""
-        # Create Sentinel with explicit security
-        security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        # Create Sentinel with explicit security that requires key manager
+        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+        
+        policy_with_km = DefaultSecurityPolicy(
+            signing=SigningConfig(
+                outbound=OutboundSigningRules(default_signing=True)
+            )
+        )
+        
+        security = await SecurityManagerFactory.create_security_manager(policy_with_km)
         storage_provider = InMemoryStorageProvider()
         sentinel = Sentinel(security_manager=security, storage_provider=storage_provider)
 
@@ -152,8 +205,16 @@ class TestPolicyDrivenSecurityArchitecture:
     @pytest.mark.asyncio
     async def test_complete_architecture_integration(self):
         """Test the complete architecture integration."""
-        # Create a complete setup
-        security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        # Create a complete setup with policy that requires key managers
+        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+        
+        policy_with_km = DefaultSecurityPolicy(
+            signing=SigningConfig(
+                outbound=OutboundSigningRules(default_signing=True)
+            )
+        )
+        
+        security = await SecurityManagerFactory.create_security_manager(policy_with_km)
 
         # Create regular node
         storage_provider = InMemoryStorageProvider()

@@ -6,7 +6,7 @@ from naylence.fame.security.policy.security_policy import SigningConfig
 from naylence.fame.security.signing.eddsa_envelope_verifier import (
     EdDSAEnvelopeVerifier,
     _load_public_key_from_jwk,
-)
+, SigningMaterial)
 
 # Import test utilities
 try:
@@ -26,7 +26,7 @@ class TestCertificateIntegration:
         """Test that SigningConfig supports certificate-related fields."""
         from naylence.fame.security.policy.security_policy import SigningMaterial
 
-        config = SigningConfig()
+        config = SigningConfig(, SigningMaterial)
 
         # Test defaults
         assert config.signing_material == SigningMaterial.RAW_KEY
@@ -48,7 +48,7 @@ class TestCertificateIntegration:
         from naylence.fame.security.keys.key_provider import get_key_provider
         from naylence.fame.security.policy.security_policy import SigningMaterial
 
-        config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN)
+        config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, SigningMaterial)
         verifier = EdDSAEnvelopeVerifier(key_provider=get_key_provider(), signing_config=config)
 
         assert verifier._signing_config.signing_material == SigningMaterial.X509_CHAIN
@@ -58,7 +58,7 @@ class TestCertificateIntegration:
         from naylence.fame.security.keys.key_provider import get_key_provider
         from naylence.fame.security.policy.security_policy import SigningMaterial
 
-        verifier = EdDSAEnvelopeVerifier(key_provider=get_key_provider())
+        verifier = EdDSAEnvelopeVerifier(key_provider=get_key_provider(, SigningMaterial))
 
         assert verifier._signing_config.signing_material == SigningMaterial.RAW_KEY
 
@@ -174,7 +174,7 @@ class TestCertificateIntegration:
             # Test with certificates enabled
             from naylence.fame.security.policy.security_policy import SigningMaterial
 
-            config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN)
+            config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, SigningMaterial)
             # Should successfully extract public key
             key_result = _load_public_key_from_jwk(jwk, config)
 

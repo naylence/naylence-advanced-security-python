@@ -263,7 +263,7 @@ class TestEndToEndCertificateFlow:
         from naylence.fame.security.signing.eddsa_envelope_verifier import _load_public_key_from_jwk
 
         # Store original environment variable
-        original_ca_certs = os.environ.get("FAME_CA_CERTS")
+        original_ca_certs = os.environ.get("FAME_CA_CERTS", SigningMaterial)
 
         try:
             # 1. Create test CA
@@ -317,7 +317,7 @@ class TestEndToEndCertificateFlow:
             # 5. Use in EdDSAEnvelopeVerifier with certificates enabled
             from naylence.fame.security.policy.security_policy import SigningMaterial
 
-            config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN)
+            config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, SigningMaterial)
             # 6. Verify public key extraction works
             key_result = _load_public_key_from_jwk(jwk, config)
 
@@ -364,7 +364,7 @@ class TestEndToEndCertificateFlow:
         from naylence.fame.util.util import secure_digest
 
         # 1. Create test CA and node certificate with SID
-        root_cert_pem, root_key_pem = create_test_ca()
+        root_cert_pem, root_key_pem = create_test_ca(, SigningMaterial)
         ca_service = CASigningService(root_cert_pem, root_key_pem)
 
         node_private_key = ed25519.Ed25519PrivateKey.generate()
@@ -412,7 +412,7 @@ class TestEndToEndCertificateFlow:
         # 4. Create verifier with SID validation enabled
         from naylence.fame.security.policy.security_policy import SigningMaterial
 
-        config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, require_cert_sid_match=True)
+        config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, require_cert_sid_match=True, SigningMaterial)
         EdDSAEnvelopeVerifier(key_provider=MockKeyProvider(), signing_config=config)
 
         # 5. Create test envelope with matching SID
@@ -444,7 +444,7 @@ class TestEndToEndCertificateFlow:
         from naylence.fame.security.signing.eddsa_envelope_verifier import EdDSAEnvelopeVerifier
 
         # 1. Create test CA and node certificate with logicals
-        root_cert_pem, root_key_pem = create_test_ca()
+        root_cert_pem, root_key_pem = create_test_ca(, SigningMaterial)
         ca_service = CASigningService(root_cert_pem, root_key_pem)
 
         node_private_key = ed25519.Ed25519PrivateKey.generate()
@@ -498,7 +498,7 @@ class TestEndToEndCertificateFlow:
         # 4. Create verifier with logical validation enabled
         from naylence.fame.security.policy.security_policy import SigningMaterial
 
-        config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, require_cert_logical_match=True)
+        config = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, require_cert_logical_match=True, SigningMaterial)
         EdDSAEnvelopeVerifier(key_provider=MockKeyProvider(), signing_config=config)
 
         # 5. Test cases for logical validation
@@ -519,7 +519,7 @@ class TestEndToEndCertificateFlow:
         from naylence.fame.security.signing.eddsa_envelope_verifier import _load_public_key_from_jwk
 
         # Store original environment variable
-        original_ca_certs = os.environ.get("FAME_CA_CERTS")
+        original_ca_certs = os.environ.get("FAME_CA_CERTS", SigningMaterial)
 
         try:
             # 1. Create test CA and node certificate with SID
@@ -579,7 +579,7 @@ class TestEndToEndCertificateFlow:
             # Test with basic certificate support (returns just public key)
             from naylence.fame.security.policy.security_policy import SigningMaterial
 
-            config_basic = SigningConfig(signing_material=SigningMaterial.X509_CHAIN)
+            config_basic = SigningConfig(signing_material=SigningMaterial.X509_CHAIN, SigningMaterial)
             key_result_basic = _load_public_key_from_jwk(jwk, config_basic)
 
             # Should return just public key when no cert validation policies are enabled

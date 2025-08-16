@@ -144,17 +144,38 @@ async def test_complete_algorithm_preference_system():
     print("\n6. Testing real-world scenario with DefaultSecurityPolicy...")
 
     policy = DefaultSecurityPolicy()
-    policy.requirements()
+    requirements = policy.requirements()
+    print(f"   Default policy signing required: {requirements.signing_required}")
+    print(f"   Default policy encryption required: {requirements.encryption_required}")
+    
     node_security = await SecurityManagerFactory.create_security_manager(policy)
 
-    # Verify all auto-created components are created
+    # The default policy correctly creates no components
     assert node_security.policy is not None
-    assert node_security.envelope_signer is not None
-    assert node_security.envelope_verifier is not None
+    
+    # Create a policy that actually requires components
+    from naylence.fame.security.policy.security_policy import (
+        SigningConfig, OutboundSigningRules, EncryptionConfig, OutboundCryptoRules, CryptoLevel
+    )
+    
+    policy_with_requirements = DefaultSecurityPolicy(
+        signing=SigningConfig(
+            outbound=OutboundSigningRules(default_signing=True)
+        ),
+        encryption=EncryptionConfig(
+            outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
+        )
+    )
+    
+    node_security_with_reqs = await SecurityManagerFactory.create_security_manager(policy_with_requirements)
+    
+    # Now these should be created
+    assert node_security_with_reqs.envelope_signer is not None
+    assert node_security_with_reqs.envelope_verifier is not None
     # Encryption managers ARE auto-created when policy requires encryption and dependencies are available
-    assert node_security.encryption is not None
-    assert node_security.key_manager is not None
-    assert node_security.authorizer is not None  # Should be auto-created now
+    assert node_security_with_reqs.encryption is not None
+    assert node_security_with_reqs.key_manager is not None
+    assert node_security_with_reqs.authorizer is not None  # Should be auto-created now
 
     print("✓ Real-world DefaultSecurityPolicy integration works")
     print(f"  - Policy: {type(node_security.policy).__name__}")
