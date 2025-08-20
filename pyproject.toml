@@ -1,6 +1,6 @@
 [project]
 name = "naylence-advanced-security"
-version = "0.1.2"
+version = "0.1.3"
 description = "Naylence Advanced Security"
 authors = [
     {name = "naylencedev@gmail.com"}
@@ -130,3 +130,9 @@ DefaultCertificateManager = "naylence.fame.security.cert.default_certificate_man
 
 [project.entry-points."naylence.AttachmentKeyValidatorFactory"]
 AttachmentCertValidator = "naylence.fame.security.cert.attachment_cert_validator_factory:AttachmentCertValidatorFactory"
+
+[project.entry-points."naylence.ReplicaStickinessManagerFactory"]
+AFTReplicaStickinessManager = "naylence.fame.stickiness.aft_replica_stickiness_manager_factory:AFTReplicaStickinessManagerFactory"
+
+[project.entry-points."naylence.LoadBalancerStickinessManagerFactory"]
+AFTLoadBalancerStickinessManager = "naylence.fame.stickiness.aft_load_balancer_stickiness_manager_factory:AFTLoadBalancerStickinessManagerFactory"
