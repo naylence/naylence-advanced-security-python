@@ -8,13 +8,25 @@ both sides trust each other's certificates before establishing the connection.
 
 from __future__ import annotations
 
+from datetime import datetime
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from naylence.fame.security.keys.attachment_key_validator import AttachmentKeyValidator
+from naylence.fame.security.keys.attachment_key_validator import (
+    AttachmentKeyValidator,
+    KeyInfo,
+    KeyValidationError,
+)
 from naylence.fame.util.logging import getLogger
 
 logger = getLogger(__name__)
+
+
+class CertKeyInfo(KeyInfo):
+    """Metadata about a validated key/certificate."""
+    not_before: Optional[datetime] = None
+    cert_subject: Optional[str] = None
+    cert_issuer: Optional[str] = None
 
 
 class AttachmentCertValidator(AttachmentKeyValidator):
@@ -36,153 +48,89 @@ class AttachmentCertValidator(AttachmentKeyValidator):
         self.strict_validation = strict_validation
         logger.debug("attachment_cert_validator_initialized")
 
-    async def validate_attachment_keys(
-        self, keys: Optional[List[Dict[str, Any]]], peer_id: str, scenario: str
-    ) -> Tuple[bool, str]:
-        """
-        Validate certificates in keys during attachment handshake.
-
-        This function performs strict certificate validation during the attachment
-        process, ensuring that any certificate-bearing keys are rooted in trusted CAs.
-        If validation fails, the attachment should be rejected.
-
-        Args:
-            keys: List of JWK keys (may contain x5c certificate chains)
-            peer_id: Identifier of the peer node for logging
-            scenario: Description of the validation scenario (e.g., "child_attach", "parent_attach")
-
-        Returns:
-            Tuple of (is_valid, error_message)
-            - is_valid: True if all certificates are valid or no certificates present
-            - error_message: Description of validation failure if any
-        """
-        if not keys:
-            logger.debug("no_keys_provided_for_attachment_validation", peer_id=peer_id, scenario=scenario)
-            return True, "No keys provided"
+    async def validate_key(self, key: Dict[str, Any]) -> KeyInfo:
+        """Validate a single JWK and return KeyInfo; raise KeyValidationError on failure."""
+        kid = key.get("kid")
+        
+        # Keys without certificates are allowed; return basic info
+        if "x5c" not in key:
+            return KeyInfo(kid=kid)
 
         # Get trust store - either from configured location or environment variable
         trust_store_pem = None
         if self.trust_store:
-            # Read from configured trust store file
             try:
                 with open(self.trust_store) as f:
                     trust_store_pem = f.read()
             except Exception as e:
-                logger.error(
-                    "attachment_trust_store_read_failed",
-                    peer_id=peer_id,
-                    scenario=scenario,
-                    trust_store_path=self.trust_store,
-                    error=str(e),
-                    action="reject_attachment",
+                raise KeyValidationError(
+                    code="trust_store_read_failed",
+                    message=f"Failed to read trust store from {self.trust_store}: {str(e)}",
+                    kid=kid,
                 )
-                return False, f"Failed to read trust store from {self.trust_store}: {str(e)}"
         else:
-            # Fall back to FAME_CA_CERTS environment variable
             trust_store_pem = os.environ.get("FAME_CA_CERTS")
 
         if not trust_store_pem:
             # For backward compatibility during transition, log warning but don't fail
-            logger.warning(
-                "attachment_certificate_validation_skipped",
-                peer_id=peer_id,
-                scenario=scenario,
-                reason="trust_store_not_configured",
-                message="Certificate validation skipped - no trust store configured"
-                " and FAME_CA_CERTS environment variable not set",
+            return CertKeyInfo(kid=kid)
+
+        try:
+            from naylence.fame.security.cert.util import (
+                validate_jwk_x5c_certificate,
+                _validate_chain,
             )
-            return True, "Trust store not configured"
 
-        # Validate each key that contains certificates
-        has_certificates = False
-        validation_errors = []
-
-        for i, key in enumerate(keys):
-            if "x5c" not in key:
-                continue  # Skip keys without certificates
-
-            has_certificates = True
-            kid = key.get("kid", f"key_{i}")
-
-            try:
-                from naylence.fame.security.cert.util import validate_jwk_x5c_certificate
-
-                is_valid, error_msg = validate_jwk_x5c_certificate(
-                    key,
-                    trust_store_pem=trust_store_pem,
-                    enforce_name_constraints=self.enforce_name_constraints,
-                    strict=self.strict_validation,
-                )
-
-                if not is_valid:
-                    error_detail = f"Key {kid}: {error_msg}"
-                    validation_errors.append(error_detail)
-                    logger.error(
-                        "attachment_certificate_validation_failed",
-                        peer_id=peer_id,
-                        scenario=scenario,
-                        kid=kid,
-                        error=error_msg,
-                        action="reject_attachment",
-                    )
-                else:
-                    logger.debug(
-                        "attachment_certificate_validation_passed",
-                        peer_id=peer_id,
-                        scenario=scenario,
-                        kid=kid,
-                    )
-
-            except Exception as e:
-                error_detail = f"Key {kid}: validation exception - {str(e)}"
-                validation_errors.append(error_detail)
-                logger.error(
-                    "attachment_certificate_validation_exception",
-                    peer_id=peer_id,
-                    scenario=scenario,
+            is_valid, error_msg = validate_jwk_x5c_certificate(
+                key,
+                trust_store_pem=trust_store_pem,
+                enforce_name_constraints=self.enforce_name_constraints,
+                strict=self.strict_validation,
+            )
+            
+            if not is_valid:
+                raise KeyValidationError(
+                    code="certificate_invalid",
+                    message=error_msg or "certificate validation failed",
                     kid=kid,
-                    error=str(e),
-                    action="reject_attachment",
                 )
 
-        if validation_errors:
-            error_summary = (
-                f"Certificate validation failed for {len(validation_errors)} key(s): "
-                + "; ".join(validation_errors)
+            # Extract certificate metadata for KeyInfo
+            (pub_key, cert), _ = _validate_chain(
+                x5c=key.get("x5c", []),
+                enforce_name_constraints=self.enforce_name_constraints,
+                trust_store_pem=trust_store_pem,
+                return_cert=True,
             )
-            return False, error_summary
-
-        if has_certificates:
-            logger.debug(
-                "attachment_certificate_validation_successful",
-                peer_id=peer_id,
-                scenario=scenario,
-                validated_keys=len([k for k in keys if "x5c" in k]),
+            
+            # Use UTC-aware properties preferentially to avoid deprecation warnings
+            expires_at = getattr(cert, "not_valid_after_utc", None)
+            not_before = getattr(cert, "not_valid_before_utc", None)
+            
+            subject = None
+            issuer = None
+            try:
+                subject = cert.subject.rfc4514_string()
+                issuer = cert.issuer.rfc4514_string()
+            except Exception:
+                pass
+            
+            return CertKeyInfo(
+                kid=kid,
+                expires_at=expires_at,
+                not_before=not_before,
+                cert_subject=subject,
+                cert_issuer=issuer,
             )
-        else:
-            logger.debug(
-                "attachment_no_certificates_to_validate",
-                peer_id=peer_id,
-                scenario=scenario,
-                total_keys=len(keys),
+            
+        except KeyValidationError:
+            raise
+        except Exception as e:
+            raise KeyValidationError(
+                code="certificate_validation_error",
+                message=str(e),
+                kid=kid,
             )
-
-        return True, "Validation successful"
-
-    async def validate_child_attachment_keys(
-        self, child_keys: Optional[List[Dict[str, Any]]], child_id: str
-    ) -> Tuple[bool, str]:
-        """
-        Validate a child node's keys during attachment from the parent's perspective.
-
-        Args:
-            child_keys: Keys provided by the child node
-            child_id: Child node identifier
-
-        Returns:
-            Tuple of (is_valid, error_message)
-        """
-        return await self.validate_attachment_keys(child_keys, child_id, "child_attach")
 
     async def validate_child_attachment_logicals(
         self,
@@ -251,18 +199,3 @@ class AttachmentCertValidator(AttachmentKeyValidator):
 
         except Exception as e:
             return False, f"Logical validation error: {str(e)}"
-
-    async def validate_parent_attachment_keys(
-        self, parent_keys: Optional[List[Dict[str, Any]]], parent_id: str
-    ) -> Tuple[bool, str]:
-        """
-        Validate a parent node's keys during attachment from the child's perspective.
-
-        Args:
-            parent_keys: Keys provided by the parent node
-            parent_id: Parent node identifier
-
-        Returns:
-            Tuple of (is_valid, error_message)
-        """
-        return await self.validate_attachment_keys(parent_keys, parent_id, "parent_attach")

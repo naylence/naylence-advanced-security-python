@@ -27,7 +27,13 @@ async def test_trust_store_fallback():
     print(f"  strict_validation: {validator1.strict_validation}")
 
     # Test validation with no trust store
-    result, message = await validator1.validate_attachment_keys([], "test-peer", "test-scenario")
+    try:
+        key_infos = await validator1.validate_keys([])
+        result = True
+        message = ""
+    except Exception as e:
+        result = False
+        message = str(e)
     print(f"  Validation result: {result}, message: {message}")
     print()
 
@@ -45,7 +51,13 @@ async def test_trust_store_fallback():
         print(f"  strict_validation: {validator2.strict_validation}")
 
         # Test validation with configured trust store
-        result, message = await validator2.validate_attachment_keys([], "test-peer", "test-scenario")
+        try:
+            key_infos = await validator2.validate_keys([])
+            result = True
+            message = ""
+        except Exception as e:
+            result = False
+            message = str(e)
         print(f"  Validation result: {result}, message: {message}")
         print()
     finally:
@@ -64,7 +76,13 @@ async def test_trust_store_fallback():
     print(f"  strict_validation: {validator3.strict_validation}")
 
     # Test validation with environment variable
-    result, message = await validator3.validate_attachment_keys([], "test-peer", "test-scenario")
+    try:
+        key_infos = await validator3.validate_keys([])
+        result = True
+        message = ""
+    except Exception as e:
+        result = False
+        message = str(e)
     print(f"  Validation result: {result}, message: {message}")
     print()
 

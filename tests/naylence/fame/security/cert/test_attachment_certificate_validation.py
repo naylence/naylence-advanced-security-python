@@ -46,18 +46,26 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
 
     try:
         # This should pass - no certificates to validate
-        is_valid, error = await cert_validator.validate_child_attachment_keys(
-            [jwk_without_cert], "test-child"
-        )
-        assert is_valid, f"Should accept keys without certificates: {error}"
+        try:
+            key_infos = await cert_validator.validate_keys([jwk_without_cert])
+            assert len(key_infos) == 1, "Should return one KeyInfo"
+            assert key_infos[0].kid == "no-cert-node", "Should preserve kid"
+        except Exception as e:
+            pytest.fail(f"Should accept keys without certificates: {e}")
 
         # This should pass - empty keys list
-        is_valid, error = await cert_validator.validate_child_attachment_keys([], "test-child")
-        assert is_valid, f"Should accept empty keys list: {error}"
+        try:
+            key_infos = await cert_validator.validate_keys([])
+            assert len(key_infos) == 0, "Should return empty list for empty input"
+        except Exception as e:
+            pytest.fail(f"Should accept empty keys list: {e}")
 
         # This should pass - None keys
-        is_valid, error = await cert_validator.validate_child_attachment_keys(None, "test-child")
-        assert is_valid, f"Should accept None keys: {error}"
+        try:
+            key_infos = await cert_validator.validate_keys(None)
+            assert len(key_infos) == 0, "Should return empty list for None input"
+        except Exception as e:
+            pytest.fail(f"Should accept None keys: {e}")
 
     finally:
         # Restore original environment
@@ -92,11 +100,15 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
 
     try:
         # This should fail - invalid certificate
-        is_valid, error = await cert_validator.validate_child_attachment_keys(
-            [invalid_jwk_with_cert], "test-child"
-        )
+        try:
+            key_infos = await cert_validator.validate_keys([invalid_jwk_with_cert])
+            is_valid = True
+            error = ""
+        except Exception as e:
+            is_valid = False
+            error = str(e)
         assert not is_valid, f"Should reject invalid certificates: {error}"
-        assert "Certificate validation failed" in error
+        assert "Certificate validation failed" in error or "certificate" in error.lower()
 
     finally:
         # Restore original environment
@@ -126,11 +138,14 @@ async def test_no_trust_store_configured(cert_validator):
 
     try:
         # This should pass with warning - no trust store configured
-        is_valid, error = await cert_validator.validate_parent_attachment_keys(
-            [valid_jwk_with_cert], "test-parent"
-        )
+        try:
+            key_infos = await cert_validator.validate_keys([valid_jwk_with_cert])
+            is_valid = True
+            error = ""
+        except Exception as e:
+            is_valid = False
+            error = str(e)
         assert is_valid, f"Should accept when no trust store configured: {error}"
-        assert "Trust store not configured" in error
 
     finally:
         # Restore original environment
@@ -164,9 +179,15 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
 
     try:
         mixed_keys = [jwk_without_cert, invalid_jwk_with_cert]
-        is_valid, error = await cert_validator.validate_child_attachment_keys(mixed_keys, "test-child")
+        try:
+            key_infos = await cert_validator.validate_keys(mixed_keys)
+            is_valid = True
+            error = ""
+        except Exception as e:
+            is_valid = False
+            error = str(e)
         assert not is_valid, f"Should reject if any certificate is invalid: {error}"
-        assert "Certificate validation failed" in error
+        assert "Certificate validation failed" in error or "certificate" in error.lower()
 
     finally:
         # Restore original environment
@@ -196,23 +217,35 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
         valid_parent_keys = [{"kty": "RSA", "kid": "parent-1", "use": "sig"}]  # No x5c
 
         # Child validation (server side)
-        child_valid, child_error = await cert_validator.validate_child_attachment_keys(
-            valid_child_keys, "child-node"
-        )
+        try:
+            child_key_infos = await cert_validator.validate_keys(valid_child_keys)
+            child_valid = True
+            child_error = ""
+        except Exception as e:
+            child_valid = False
+            child_error = str(e)
         assert child_valid, f"Child keys should be valid: {child_error}"
 
         # Parent validation (client side)
-        parent_valid, parent_error = await cert_validator.validate_parent_attachment_keys(
-            valid_parent_keys, "parent-node"
-        )
+        try:
+            parent_key_infos = await cert_validator.validate_keys(valid_parent_keys)
+            parent_valid = True
+            parent_error = ""
+        except Exception as e:
+            parent_valid = False
+            parent_error = str(e)
         assert parent_valid, f"Parent keys should be valid: {parent_error}"
 
         # Scenario 2: Child has invalid certificate
         invalid_child_keys = [{"kty": "RSA", "kid": "child-2", "use": "sig", "x5c": ["invalid-cert-data"]}]
 
-        child_valid, child_error = await cert_validator.validate_child_attachment_keys(
-            invalid_child_keys, "child-node-2"
-        )
+        try:
+            child_key_infos = await cert_validator.validate_keys(invalid_child_keys)
+            child_valid = True
+            child_error = ""
+        except Exception as e:
+            child_valid = False
+            child_error = str(e)
         assert not child_valid, f"Invalid child certificate should be rejected: {child_error}"
 
         # Scenario 3: Parent has invalid certificate
@@ -220,9 +253,13 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
             {"kty": "RSA", "kid": "parent-2", "use": "sig", "x5c": ["invalid-cert-data"]}
         ]
 
-        parent_valid, parent_error = await cert_validator.validate_parent_attachment_keys(
-            invalid_parent_keys, "parent-node-2"
-        )
+        try:
+            parent_key_infos = await cert_validator.validate_keys(invalid_parent_keys)
+            parent_valid = True
+            parent_error = ""
+        except Exception as e:
+            parent_valid = False
+            parent_error = str(e)
         assert not parent_valid, f"Invalid parent certificate should be rejected: {parent_error}"
 
     finally:
