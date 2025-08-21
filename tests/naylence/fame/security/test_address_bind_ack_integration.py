@@ -87,7 +87,6 @@ async def test_address_bind_ack_signature_mirroring_integration():
         # Create signed AddressBind request
         address_bind_frame = AddressBindFrame(
             address=FameAddress("service@/test/path"),
-            corr_id="test-corr-123",
             encryption_key_id="test-key-456",
         )
 
@@ -95,6 +94,7 @@ async def test_address_bind_ack_signature_mirroring_integration():
         signed_envelope = FameEnvelope(
             id=generate_id(),
             frame=address_bind_frame,
+            corr_id="test-corr-123",
         )
 
         # Add signature to indicate this was a signed request
@@ -157,7 +157,7 @@ async def test_address_bind_ack_signature_mirroring_integration():
         # Verify the ACK frame details
         assert isinstance(ack_envelope.frame, AddressBindAckFrame)
         assert ack_envelope.frame.address == FameAddress("service@/test/path")
-        assert ack_envelope.frame.corr_id == "test-corr-123"
+        assert ack_envelope.corr_id == "test-corr-123"
         assert ack_envelope.frame.success is True
 
         print("✅ AddressBindAck signature mirroring integration test passed!")
@@ -231,7 +231,6 @@ async def test_address_bind_ack_no_signature_mirroring_for_unsigned_request():
         # Create unsigned AddressBind request
         address_bind_frame = AddressBindFrame(
             address=FameAddress("service@/test/path"),
-            corr_id="test-corr-789",
             encryption_key_id="test-key-456",
         )
 
@@ -239,6 +238,7 @@ async def test_address_bind_ack_no_signature_mirroring_for_unsigned_request():
         unsigned_envelope = FameEnvelope(
             id=generate_id(),
             frame=address_bind_frame,
+            corr_id="test-corr-789",
         )
 
         # Create context indicating an unsigned downstream request
@@ -275,7 +275,7 @@ async def test_address_bind_ack_no_signature_mirroring_for_unsigned_request():
         # Verify the ACK frame details
         assert isinstance(ack_envelope.frame, AddressBindAckFrame)
         assert ack_envelope.frame.address == FameAddress("service@/test/path")
-        assert ack_envelope.frame.corr_id == "test-corr-789"
+        assert ack_envelope.corr_id == "test-corr-789"
         assert ack_envelope.frame.success is True
 
         print("✅ AddressBindAck unsigned request test passed!")

@@ -780,7 +780,10 @@ class ChannelEncryptionManager(EncryptionManager):
             reply_to_address = format_address("__sys__", node_physical_path)
 
             envelope = envelope_factory.create_envelope(
-                to=FameAddress(str(destination)), frame=open_frame, reply_to=reply_to_address
+                to=FameAddress(str(destination)),
+                frame=open_frame,
+                reply_to=reply_to_address,
+                corr_id=generate_id()
             )
 
             # Deliver directly using async
@@ -873,10 +876,9 @@ class ChannelEncryptionManager(EncryptionManager):
             )
 
             # Create DeliveryAckFrame with failure status
-            # Use the original frame's corr_id, not the envelope ID
-            original_corr_id = getattr(original_envelope.frame, "corr_id", None)
+            # Use the original envelope's corr_id
+            original_corr_id = original_envelope.corr_id
             nack_frame = DeliveryAckFrame(
-                corr_id=original_corr_id,
                 success=False,
                 code="channel_handshake_failed",
                 reason=failure_reason,
@@ -886,6 +888,7 @@ class ChannelEncryptionManager(EncryptionManager):
             nack_envelope = envelope_factory.create_envelope(
                 to=FameAddress(str(original_envelope.reply_to)),
                 frame=nack_frame,
+                corr_id=original_corr_id,
             )
 
             # Create delivery context

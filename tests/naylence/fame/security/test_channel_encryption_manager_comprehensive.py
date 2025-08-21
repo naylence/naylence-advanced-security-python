@@ -991,12 +991,12 @@ class TestChannelEncryptionManagerComprehensive:
 
     async def test_send_delivery_nack_successful(self, encryption_manager):
         """Test successful _send_delivery_nack."""
-        # Set up frame with corr_id
+        # Set up frame and envelope with corr_id
         data_frame = DataFrame(payload="test")
-        data_frame.corr_id = "test-correlation-id"
 
         envelope = create_fame_envelope(frame=data_frame)
         envelope.reply_to = FameAddress("reply@test")
+        envelope.corr_id = "test-correlation-id"
 
         # Mock envelope factory
         mock_nack_envelope = Mock()
@@ -1009,7 +1009,8 @@ class TestChannelEncryptionManagerComprehensive:
         create_call = encryption_manager._node_like._envelope_factory.create_envelope.call_args
         assert create_call[1]["to"] == FameAddress(str(envelope.reply_to))
         assert isinstance(create_call[1]["frame"], DeliveryAckFrame)
-        assert create_call[1]["frame"].corr_id == "test-correlation-id"
+        # corr_id should be passed to the envelope, not the frame anymore
+        assert create_call[1]["corr_id"] == "test-correlation-id"
         assert create_call[1]["frame"].success is False
         assert create_call[1]["frame"].code == "channel_handshake_failed"
         assert create_call[1]["frame"].reason == "test reason"

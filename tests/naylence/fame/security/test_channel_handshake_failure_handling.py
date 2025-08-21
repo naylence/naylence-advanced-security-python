@@ -86,8 +86,9 @@ class TestChannelHandshakeFailureHandling:
         assert isinstance(nack_frame, DeliveryAckFrame)
         assert nack_frame.success is False
         assert nack_frame.code == "channel_handshake_failed"
-        # corr_id should be the original frame's corr_id (None for DataFrame by default)
-        assert nack_frame.corr_id == data_frame.corr_id
+        # corr_id should be passed to the envelope, not the frame anymore
+        nack_corr_id = call_args.kwargs.get("corr_id")
+        assert nack_corr_id == envelope.corr_id
         assert nack_frame.reason and "negative_secure_accept" in nack_frame.reason
 
         # Verify that deliver was called to send the NACK
@@ -445,8 +446,9 @@ class TestChannelHandshakeFailureHandling:
 
         nack_frame = call_args.kwargs["frame"]
         assert isinstance(nack_frame, DeliveryAckFrame)
-        # corr_id should be the original frame's corr_id (None for DataFrame by default)
-        assert nack_frame.corr_id == data_frame.corr_id
+        # corr_id should be passed to the envelope, not the frame anymore
+        nack_corr_id = call_args.kwargs.get("corr_id")
+        assert nack_corr_id == data_envelope.corr_id
 
         # Verify queue was cleared
         assert destination_str not in manager._pending_envelopes
@@ -476,6 +478,7 @@ async def test_full_channel_handshake_failure_integration():
         envelope.id = f"nack-{generate_id()}"
         envelope.to = kwargs.get("to")
         envelope.frame = kwargs.get("frame")
+        envelope.corr_id = kwargs.get("corr_id")
         return envelope
 
     mock_envelope_factory.create_envelope.side_effect = create_nack_envelope
@@ -515,6 +518,7 @@ async def test_full_channel_handshake_failure_integration():
         to=FameAddress("remote-service@/remote/node"),
         reply_to=FameAddress("local-client@/integration-test-node"),
         frame=data_frame,
+        corr_id="integration-test-correlation",
     )
 
     # Simulate envelope being queued for channel handshake
@@ -542,8 +546,8 @@ async def test_full_channel_handshake_failure_integration():
     assert isinstance(nack_envelope.frame, DeliveryAckFrame)
     assert nack_envelope.frame.success is False
     assert nack_envelope.frame.code == "channel_handshake_failed"
-    # corr_id should be the original frame's corr_id (None for DataFrame by default)
-    assert nack_envelope.frame.corr_id == data_frame.corr_id
+    # corr_id should be on the envelope, not the frame anymore
+    assert nack_envelope.corr_id == "integration-test-correlation"
     assert nack_envelope.frame.reason and "peer_authentication_failed" in nack_envelope.frame.reason
 
     # Verify cleanup

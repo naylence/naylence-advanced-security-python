@@ -47,7 +47,10 @@ class DefaultSecureChannelManager(SecureChannelManager):
 
         logger.debug("generated_channel_open", cid=cid, algorithm=algorithm)
 
-        return SecureOpenFrame(cid=cid, eph_pub=pub_bytes, alg=algorithm, corr_id=generate_id())
+        return SecureOpenFrame(
+            cid=cid, eph_pub=pub_bytes, alg=algorithm,
+            # corr_id=generate_id()
+        )
 
     async def handle_open_frame(self, frame: SecureOpenFrame) -> SecureAcceptFrame:
         """Handle incoming SecureOpenFrame and generate response."""
@@ -58,7 +61,6 @@ class DefaultSecureChannelManager(SecureChannelManager):
                 eph_pub=b"\x00" * 32,  # Dummy key
                 ok=False,
                 err=f"Unsupported algorithm: {frame.alg}",
-                corr_id=frame.corr_id,
             )
 
         # Generate our ephemeral key pair
@@ -93,7 +95,7 @@ class DefaultSecureChannelManager(SecureChannelManager):
         logger.debug("channel_established", cid=frame.cid, algorithm=frame.alg)
 
         return SecureAcceptFrame(
-            cid=frame.cid, eph_pub=my_pub_bytes, alg=frame.alg, ok=True, corr_id=frame.corr_id
+            cid=frame.cid, eph_pub=my_pub_bytes, alg=frame.alg, ok=True
         )
 
     async def handle_accept_frame(self, frame: SecureAcceptFrame) -> bool:

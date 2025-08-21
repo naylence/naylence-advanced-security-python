@@ -239,11 +239,11 @@ async def test_key_request_address_stickiness():
     key_request_frame = KeyRequestFrame(
         address=FameAddress("service@/test/local/node"),
         physical_path="/test/local/node",
-        corr_id="test-correlation-789",
     )
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)
+    envelope.corr_id = "test-correlation-789"
 
     # Create delivery context
     context = FameDeliveryContext(from_system_id="test-client", origin_type=DeliveryOriginType.DOWNSTREAM)
@@ -292,11 +292,12 @@ async def test_signing_key_request_no_stickiness():
 
     # Create KeyRequest frame for signing key
     key_request_frame = KeyRequestFrame(
-        kid="test-sign-key-123", physical_path="/test/path", corr_id="test-correlation-456"
+        kid="test-sign-key-123", physical_path="/test/path"
     )
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)
+    envelope.corr_id = "test-correlation-456"
 
     # Create delivery context
     context = FameDeliveryContext(from_system_id="test-client", origin_type=DeliveryOriginType.DOWNSTREAM)
@@ -362,11 +363,12 @@ async def test_child_node_key_request_stickiness():
 
     # Create KeyRequest frame by key ID
     key_request_frame = KeyRequestFrame(
-        kid="child-enc-key-456", physical_path="/child/path", corr_id="test-correlation-child"
+        kid="child-enc-key-456", physical_path="/child/path"
     )
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)
+    envelope.corr_id = "test-correlation-child"
 
     # Create delivery context
     context = FameDeliveryContext(from_system_id="test-parent", origin_type=DeliveryOriginType.UPSTREAM)
@@ -406,11 +408,12 @@ async def test_child_node_signing_key_no_stickiness():
 
     # Create KeyRequest frame by address (will trigger signature key fallback)
     key_request_frame = KeyRequestFrame(
-        address=FameAddress("service@/child/path"), physical_path=None, corr_id="test-correlation-signing"
+        address=FameAddress("service@/child/path"), physical_path=None
     )
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)
+    envelope.corr_id = "test-correlation-signing"
 
     # Create delivery context
     context = FameDeliveryContext(from_system_id="test-parent", origin_type=DeliveryOriginType.UPSTREAM)
