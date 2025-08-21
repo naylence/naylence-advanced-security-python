@@ -11,7 +11,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-from naylence.fame.fastapi.ca_signing_router import (
+from naylence.fame.security.fastapi.ca_signing_router import (
     CertificateIssuanceResponse,
     CertificateSigningRequest,
     LocalCASigningService,

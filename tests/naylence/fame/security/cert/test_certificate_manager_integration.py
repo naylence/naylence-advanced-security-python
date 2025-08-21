@@ -11,7 +11,7 @@ from naylence.fame.security.cert.default_certificate_manager import create_certi
 from naylence.fame.security.policy.security_policy import SigningConfig
 
 
-def test_certificate_manager_with_signing_config(, SigningMaterial):
+def test_certificate_manager_with_signing_config():
     """Test certificate manager integrates with existing SigningConfig."""
 
     # Test with X509_CHAIN requirement in SigningConfig

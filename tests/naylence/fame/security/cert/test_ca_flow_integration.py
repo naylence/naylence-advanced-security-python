@@ -33,7 +33,7 @@ async def test_root_node_ca_certificate_flow():
             def requirements(self):
                 from naylence.fame.security.policy.security_policy import SecurityRequirements
 
-                return SecurityRequirements(, SigningMaterial)
+                return SecurityRequirements()
 
         # Create security manager with X509_CHAIN requirement
         security_manager = await SecurityManagerFactory.create_security_manager(TestPolicy())
@@ -153,7 +153,7 @@ async def test_ca_service_integration():
     print("\n=== Testing CA Service Integration ===\n")
 
     try:
-        from naylence.fame.fastapi.ca_signing_router import create_ca_signing_router
+        from naylence.fame.security.fastapi.ca_signing_router import create_ca_signing_router
         from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
         from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
 
@@ -232,7 +232,7 @@ async def test_root_node_raw_key_no_certificate_flow():
             def requirements(self):
                 from naylence.fame.security.policy.security_policy import SecurityRequirements
 
-                return SecurityRequirements(, SigningMaterial)
+                return SecurityRequirements()
 
         # Create security manager with RAW_KEY (should not create certificate manager)
         security_manager = await SecurityManagerFactory.create_security_manager(TestPolicy())

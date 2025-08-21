@@ -15,7 +15,7 @@ from naylence.fame.security.cert.default_certificate_manager import create_certi
 from naylence.fame.security.policy.security_policy import SigningConfig
 
 
-def test_complete_signing_material_integration(, SigningMaterial):
+def test_complete_signing_material_integration():
     """Test that SigningMaterial works consistently across all components."""
 
     print("=== Complete SigningMaterial Integration Test ===")

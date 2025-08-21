@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""# Set node context to trigg        # Set node context to trigger certificate generation
-        crypto_file.set_node_context(
-            node_id="test-node-file", physical_path="/test/file-path", logicals=["file-logical.test.domain"]
-        )ertificate generation
-    crypto_pem.set_node_context(
-        node_id="test-node-pem", physical_path="/test/pem-path", logicals=["pem-logical.test.domain"]
-    )t script to verify CA configuration support in DefaultCryptoProvider.
-Tests both file-based and PEM-based CA configuration.
-"""
-
 import os
 import tempfile
 

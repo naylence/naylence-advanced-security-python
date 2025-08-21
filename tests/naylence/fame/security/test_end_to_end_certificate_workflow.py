@@ -20,7 +20,8 @@ async def test_end_to_end_certificate_workflow():
         OutboundSigningRules,
         SignaturePolicy,
         SigningConfig,
-    , SigningMaterial)
+        SigningMaterial
+    )
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
     from naylence.fame.util.util import secure_digest
 
@@ -31,7 +32,7 @@ async def test_end_to_end_certificate_workflow():
 
     cert_policy = DefaultSecurityPolicy(
         signing=SigningConfig(
-            inbound=InboundSigningRules(signature_policy=SignaturePolicy.OPTIONAL, SigningMaterial),
+            inbound=InboundSigningRules(signature_policy=SignaturePolicy.OPTIONAL),
             outbound=OutboundSigningRules(default_signing=True),
             signing_material=SigningMaterial.X509_CHAIN,
             validate_cert_name_constraints=True,

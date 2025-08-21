@@ -16,7 +16,7 @@ from naylence.fame.security.policy.security_policy import SigningConfig
 
 
 @pytest.mark.asyncio
-async def test_certificate_manager_factory_with_resource_factory(, SigningMaterial):
+async def test_certificate_manager_factory_with_resource_factory():
     """Test CertificateManagerFactory with create_resource."""
     print("Testing CertificateManagerFactory with resource framework...")
 
