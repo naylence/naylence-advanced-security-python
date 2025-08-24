@@ -1,6 +1,6 @@
 [project]
 name = "naylence-advanced-security"
-version = "0.1.3"
+version = "0.1.5"
 description = "Naylence Advanced Security"
 authors = [
     {name = "naylencedev@gmail.com"}
@@ -136,3 +136,6 @@ AFTReplicaStickinessManager = "naylence.fame.stickiness.aft_replica_stickiness_m
 
 [project.entry-points."naylence.LoadBalancerStickinessManagerFactory"]
 AFTLoadBalancerStickinessManager = "naylence.fame.stickiness.aft_load_balancer_stickiness_manager_factory:AFTLoadBalancerStickinessManagerFactory"
+
+[project.entry-points."naylence.KeyManagerFactory"]
+X5CKeyManager = "naylence.fame.security.keys.x5c_key_manager_factory:X5CKeyManagerFactory"

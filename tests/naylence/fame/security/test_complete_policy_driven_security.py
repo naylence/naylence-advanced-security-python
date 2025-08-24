@@ -2,7 +2,7 @@ import pytest
 
 from naylence.fame.node.node import FameNode
 from naylence.fame.node.node_meta import NodeMeta
-from naylence.fame.security.keys.default_key_manager import DefaultKeyManager
+from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
 from naylence.fame.security.policy.security_policy import SecurityRequirements
 from naylence.fame.security.security_manager_factory import SecurityManagerFactory
@@ -44,7 +44,7 @@ class TestPolicyDrivenSecurityArchitecture:
 
         # Verify key manager is included when required by policy
         assert security.key_manager is not None
-        assert isinstance(security.key_manager, DefaultKeyManager)
+        assert isinstance(security.key_manager, X5CKeyManager)
 
         print("✓ SecurityManager provides single bundle for appropriate crypto primitives")
         print("✓ Encryption managers are auto-created when policy requires encryption")
@@ -208,8 +208,8 @@ class TestPolicyDrivenSecurityArchitecture:
         assert sentinel._security_manager.envelope_verifier is security.envelope_verifier
         assert sentinel._security_manager.encryption is security.encryption
 
-        # Verify Sentinel has DefaultKeyManager (required for routing)
-        assert isinstance(sentinel._security_manager.key_manager, DefaultKeyManager)
+        # Verify Sentinel has X5CKeyManager (required for routing)
+        assert isinstance(sentinel._security_manager.key_manager, X5CKeyManager)
 
         print("✓ Sentinel delegates all security setup to the architecture")
 
@@ -278,8 +278,8 @@ class TestPolicyDrivenSecurityArchitecture:
         assert sentinel._security_manager.policy is security.policy
 
         # Verify both have appropriate key managers
-        assert isinstance(node._security_manager.key_manager, DefaultKeyManager)
-        assert isinstance(sentinel._security_manager.key_manager, DefaultKeyManager)
+        assert isinstance(node._security_manager.key_manager, X5CKeyManager)
+        assert isinstance(sentinel._security_manager.key_manager, X5CKeyManager)
 
         # Verify policy-driven behavior
         requirements = security.policy.requirements()

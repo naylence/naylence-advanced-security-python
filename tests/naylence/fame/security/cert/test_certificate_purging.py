@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test certificate purging functionality in DefaultKeyManager.
+Test certificate purging functionality in X5CKeyManager.
 """
 
 import asyncio
@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from naylence.fame.security.keys.default_key_manager import DefaultKeyManager
+from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.security.keys.in_memory_key_store import InMemoryKeyStore
 
 
@@ -148,7 +148,7 @@ async def test_certificate_purging_expired_certificates():
     print("Testing certificate purging...")
 
     key_store = InMemoryKeyStore()
-    key_manager = DefaultKeyManager(
+    key_manager = X5CKeyManager(
         key_store=key_store, cert_purge_interval=0.1
     )  # Short interval for testing
 
@@ -199,7 +199,7 @@ async def test_certificate_purging_no_expired_certificates():
     print("Testing purging with no expired certificates...")
 
     key_store = InMemoryKeyStore()
-    key_manager = DefaultKeyManager(key_store=key_store)
+    key_manager = X5CKeyManager(key_store=key_store)
 
     # Initialize with mock node
     mock_node = MockNode()
@@ -234,7 +234,7 @@ async def test_certificate_purging_non_certificate_keys():
     print("Testing purging with non-certificate keys...")
 
     key_store = InMemoryKeyStore()
-    key_manager = DefaultKeyManager(key_store=key_store)
+    key_manager = X5CKeyManager(key_store=key_store)
 
     # Initialize with mock node
     mock_node = MockNode()
@@ -274,7 +274,7 @@ async def test_background_purge_task_lifecycle():
 
     key_store = InMemoryKeyStore()
     # Very short interval for testing
-    key_manager = DefaultKeyManager(key_store=key_store, cert_purge_interval=0.1)
+    key_manager = X5CKeyManager(key_store=key_store, cert_purge_interval=0.1)
 
     mock_node = MockNode()
 
@@ -303,7 +303,7 @@ async def test_purge_with_malformed_certificates():
     print("Testing purging with malformed certificates...")
 
     key_store = InMemoryKeyStore()
-    key_manager = DefaultKeyManager(key_store=key_store)
+    key_manager = X5CKeyManager(key_store=key_store)
 
     # Initialize with mock node
     mock_node = MockNode()
