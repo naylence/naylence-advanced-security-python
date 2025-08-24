@@ -409,7 +409,7 @@ class TestErrorHandlingAndEdgeCases:
         assert len(mock_node.deliver_calls) == 1
         nack_envelope, context = mock_node.deliver_calls[0]
         assert isinstance(nack_envelope.frame, DeliveryAckFrame)
-        assert not nack_envelope.frame.success
+        assert not nack_envelope.frame.ok
         assert nack_envelope.frame.code == "test_reason"
 
     @pytest.mark.asyncio

@@ -1011,7 +1011,7 @@ class TestChannelEncryptionManagerComprehensive:
         assert isinstance(create_call[1]["frame"], DeliveryAckFrame)
         # corr_id should be passed to the envelope, not the frame anymore
         assert create_call[1]["corr_id"] == "test-correlation-id"
-        assert create_call[1]["frame"].success is False
+        assert create_call[1]["frame"].ok is False
         assert create_call[1]["frame"].code == "channel_handshake_failed"
         assert create_call[1]["frame"].reason == "test reason"
 

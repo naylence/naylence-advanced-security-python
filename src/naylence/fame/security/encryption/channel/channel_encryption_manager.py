@@ -879,7 +879,7 @@ class ChannelEncryptionManager(EncryptionManager):
             # Use the original envelope's corr_id
             original_corr_id = original_envelope.corr_id
             nack_frame = DeliveryAckFrame(
-                success=False,
+                ok=False,
                 code="channel_handshake_failed",
                 reason=failure_reason,
             )

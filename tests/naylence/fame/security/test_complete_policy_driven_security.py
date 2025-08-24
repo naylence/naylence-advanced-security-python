@@ -9,6 +9,7 @@ from naylence.fame.security.security_manager_factory import SecurityManagerFacto
 from naylence.fame.sentinel.sentinel import Sentinel
 from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
 from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 class TestPolicyDrivenSecurityArchitecture:
@@ -99,11 +100,20 @@ class TestPolicyDrivenSecurityArchitecture:
         # Create node with security bundle
         security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+        from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
+        
+        # Create envelope tracker
+        delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+        delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+        
         node = FameNode(
-            security_manager=security, storage_provider=storage_provider, node_meta_store=node_meta_store
+            security_manager=security, 
+            storage_provider=storage_provider, 
+            node_meta_store=node_meta_store,
+            delivery_tracker=delivery_tracker,
         )
 
         # Verify node uses security bundle components through the security manager
@@ -134,13 +144,20 @@ class TestPolicyDrivenSecurityArchitecture:
         security_with_km = await SecurityManagerFactory.create_security_manager(policy_with_km)
 
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+        from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
+        
+        # Create envelope tracker
+        delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+        delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+        
         node1 = FameNode(
             security_manager=security_with_km,
             storage_provider=storage_provider,
             node_meta_store=node_meta_store,
+            delivery_tracker=delivery_tracker,
         )
         assert node1._security_manager.key_manager is security_with_km.key_manager
         assert node1._security_manager.key_manager is not None
@@ -149,10 +166,16 @@ class TestPolicyDrivenSecurityArchitecture:
         security_without_km = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
         storage_provider2 = InMemoryStorageProvider()
         node_meta_store2 = InMemoryKVStore[NodeMeta](NodeMeta)
+        
+        # Create envelope tracker for second node
+        delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
+        delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
+        
         node2 = FameNode(
             security_manager=security_without_km,
             storage_provider=storage_provider2,
             node_meta_store=node_meta_store2,
+            delivery_tracker=delivery_tracker2,
         )
         assert node2._security_manager.key_manager is None
 
@@ -172,7 +195,12 @@ class TestPolicyDrivenSecurityArchitecture:
         
         security = await SecurityManagerFactory.create_security_manager(policy_with_km)
         storage_provider = InMemoryStorageProvider()
-        sentinel = Sentinel(security_manager=security, storage_provider=storage_provider)
+        
+        # Create envelope tracker for Sentinel
+        delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+        delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+        
+        sentinel = Sentinel(security_manager=security, storage_provider=storage_provider, delivery_tracker=delivery_tracker)
 
         # Verify Sentinel uses security bundle through the security manager
         assert sentinel._security_manager.policy is security.policy
@@ -189,7 +217,12 @@ class TestPolicyDrivenSecurityArchitecture:
     async def test_sentinel_routing_context_update(self):
         """Test that Sentinel updates key manager with routing context."""
         storage_provider = InMemoryStorageProvider()
-        sentinel = Sentinel(storage_provider=storage_provider)
+        
+        # Create envelope tracker for Sentinel
+        delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+        delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+        
+        sentinel = Sentinel(storage_provider=storage_provider, delivery_tracker=delivery_tracker)
 
         # Verify key manager has routing capabilities
         assert hasattr(sentinel, "forward_to_route")
@@ -219,13 +252,26 @@ class TestPolicyDrivenSecurityArchitecture:
         # Create regular node
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
+        
+        # Create envelope tracker
+        delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+        delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+        
         node = FameNode(
-            security_manager=security, storage_provider=storage_provider, node_meta_store=node_meta_store
+            security_manager=security, 
+            storage_provider=storage_provider, 
+            node_meta_store=node_meta_store,
+            delivery_tracker=delivery_tracker,
         )
 
         # Create routing node (Sentinel)
         storage_provider2 = InMemoryStorageProvider()
-        sentinel = Sentinel(security_manager=security, storage_provider=storage_provider2)
+        
+        # Create envelope tracker for Sentinel
+        delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
+        delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
+        
+        sentinel = Sentinel(security_manager=security, storage_provider=storage_provider2, delivery_tracker=delivery_tracker2)
 
         # Verify both use the same security policy
         assert node._security_manager.policy is security.policy

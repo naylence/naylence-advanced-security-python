@@ -28,6 +28,7 @@ from naylence.fame.security.policy.security_policy import (
     SigningConfig,
 )
 from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
+from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 class MockSecureChannelManager:
@@ -198,11 +199,17 @@ async def test_node_integration():
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
 
     storage_provider = InMemoryStorageProvider()
+    
+    # Create envelope tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     node = FameNode(
         system_id="test-node",
         security_manager=node_security,
         storage_provider=storage_provider,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker,
     )
     await node.start()
 

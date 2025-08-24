@@ -24,6 +24,7 @@ from naylence.fame.node.node import FameNode
 from naylence.fame.node.node_meta import NodeMeta
 from naylence.fame.security.policy import DefaultSecurityPolicy
 from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
+from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 from naylence.fame.util.logging import enable_logging, getLogger
 
 # Set up logging
@@ -77,11 +78,17 @@ async def test_debug_channel_encryption():
 
     storage_provider1 = InMemoryStorageProvider()
     node_meta_store1 = InMemoryKVStore[NodeMeta](NodeMeta)
+    
+    # Create envelope tracker for sender node
+    delivery_tracker_factory1 = DefaultDeliveryTrackerFactory()
+    delivery_tracker1 = await delivery_tracker_factory1.create(storage_provider=storage_provider1)
+    
     sender_node = FameNode(
         system_id="debug-sender",
         security_manager=sender_security,
         storage_provider=storage_provider1,
         node_meta_store=node_meta_store1,
+        delivery_tracker=delivery_tracker1,
     )
 
     receiver_security = await SecurityManagerFactory.create_security_manager(
@@ -89,11 +96,17 @@ async def test_debug_channel_encryption():
     )
     storage_provider2 = InMemoryStorageProvider()
     node_meta_store2 = InMemoryKVStore[NodeMeta](NodeMeta)
+    
+    # Create envelope tracker for receiver node
+    delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
+    delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
+    
     receiver_node = FameNode(
         system_id="debug-receiver",
         security_manager=receiver_security,
         storage_provider=storage_provider2,
         node_meta_store=node_meta_store2,
+        delivery_tracker=delivery_tracker2,
     )
 
     # Track all envelope exchanges

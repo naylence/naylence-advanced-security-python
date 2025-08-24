@@ -15,6 +15,7 @@ from naylence.fame.security.policy.security_policy import (
 )
 from naylence.fame.security.security_manager_factory import SecurityManagerFactory
 from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
+from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 @pytest.mark.asyncio
@@ -90,20 +91,32 @@ async def test_key_exchange_required_for_encryption_or_signing():
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
 
     storage_provider = InMemoryStorageProvider()
+    
+    # Create envelope tracker for first node
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     node_with_crypto = FameNode(
         system_id="test_crypto",
         security_manager=encryption_security,
         storage_provider=storage_provider,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker,
     )
     assert node_with_crypto._security_manager.key_manager is not None
 
     storage_provider2 = InMemoryStorageProvider()
+    
+    # Create envelope tracker for second node
+    delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
+    delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
+    
     node_without_crypto = FameNode(
         system_id="test_no_crypto",
         security_manager=no_crypto_security,
         storage_provider=storage_provider2,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker2,
     )
     assert node_without_crypto._security_manager.key_manager is None
 

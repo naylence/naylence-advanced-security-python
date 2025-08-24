@@ -15,6 +15,7 @@ from naylence.fame.security.policy.security_policy import (
     SecurityPolicy,
 )
 from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 class CustomSecurityPolicy(SecurityPolicy):
@@ -117,11 +118,17 @@ async def test_security_policy_integration():
 
     storage_provider = InMemoryStorageProvider()
     node_meta_store = InMemoryKVStore(NodeMeta)
+    
+    # Create envelope tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     async with FameNode(
         system_id="test_node",
         security_manager=node_security,
         storage_provider=storage_provider,
         node_meta_store=node_meta_store,
+        delivery_tracker=delivery_tracker,
     ) as node:
         # Verify the node has our custom policy through the security manager
         assert node._security_manager.policy is policy
@@ -205,11 +212,17 @@ async def test_existing_security_policy_with_context():
 
     storage_provider = InMemoryStorageProvider()
     node_meta_store = InMemoryKVStore(NodeMeta)
+    
+    # Create envelope tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     async with FameNode(
         system_id="test_node",
         security_manager=node_security,
         storage_provider=storage_provider,
         node_meta_store=node_meta_store,
+        delivery_tracker=delivery_tracker,
     ):
         # Verify our custom settings are preserved
         assert existing_policy.encryption is not None

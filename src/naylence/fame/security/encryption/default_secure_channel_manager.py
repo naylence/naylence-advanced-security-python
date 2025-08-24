@@ -60,7 +60,7 @@ class DefaultSecureChannelManager(SecureChannelManager):
                 cid=frame.cid,
                 eph_pub=b"\x00" * 32,  # Dummy key
                 ok=False,
-                err=f"Unsupported algorithm: {frame.alg}",
+                reason=f"Unsupported algorithm: {frame.alg}",
             )
 
         # Generate our ephemeral key pair
@@ -101,7 +101,7 @@ class DefaultSecureChannelManager(SecureChannelManager):
     async def handle_accept_frame(self, frame: SecureAcceptFrame) -> bool:
         """Handle incoming SecureAcceptFrame to complete handshake."""
         if not frame.ok:
-            logger.warning("channel_rejected", cid=frame.cid, error=frame.err)
+            logger.warning("channel_rejected", cid=frame.cid, error=frame.reason)
             # Clean up our ephemeral key
             self._ephemeral_keys.pop(frame.cid, None)
             return False

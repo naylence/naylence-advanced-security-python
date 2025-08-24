@@ -84,7 +84,7 @@ class TestChannelHandshakeFailureHandling:
         # Verify the NACK frame is a DeliveryAckFrame
         nack_frame = call_args.kwargs["frame"]
         assert isinstance(nack_frame, DeliveryAckFrame)
-        assert nack_frame.success is False
+        assert nack_frame.ok is False
         assert nack_frame.code == "channel_handshake_failed"
         # corr_id should be passed to the envelope, not the frame anymore
         nack_corr_id = call_args.kwargs.get("corr_id")
@@ -362,7 +362,7 @@ class TestChannelHandshakeFailureHandling:
         for call_args in mock_envelope_factory.create_envelope.call_args_list:
             nack_frame = call_args.kwargs["frame"]
             assert isinstance(nack_frame, DeliveryAckFrame)
-            assert nack_frame.success is False
+            assert nack_frame.ok is False
             assert nack_frame.code == "channel_handshake_failed"
             assert nack_frame.reason and "connection_refused" in nack_frame.reason
 
@@ -544,7 +544,7 @@ async def test_full_channel_handshake_failure_integration():
     # Verify NACK envelope
     assert nack_envelope.to == envelope.reply_to
     assert isinstance(nack_envelope.frame, DeliveryAckFrame)
-    assert nack_envelope.frame.success is False
+    assert nack_envelope.frame.ok is False
     assert nack_envelope.frame.code == "channel_handshake_failed"
     # corr_id should be on the envelope, not the frame anymore
     assert nack_envelope.corr_id == "integration-test-correlation"

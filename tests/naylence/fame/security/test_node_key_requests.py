@@ -38,13 +38,20 @@ async def test_node_with_key_requests():
         encryption_manager=encryption_manager
     )
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
+    
+    # Create envelope tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     node = FameNode(
         system_id="test-node",
         security_manager=node_security,
         storage_provider=storage_provider,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker,
     )
 
     # Use async context manager to ensure proper cleanup

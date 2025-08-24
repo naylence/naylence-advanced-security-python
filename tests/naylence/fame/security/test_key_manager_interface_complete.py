@@ -14,6 +14,7 @@ from naylence.fame.security.keys.in_memory_key_store import InMemoryKeyStore
 from naylence.fame.security.keys.key_manager import KeyManager
 from naylence.fame.sentinel.key_frame_handler import KeyFrameHandler
 from naylence.fame.sentinel.sentinel import Sentinel
+from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 @pytest.mark.asyncio
@@ -94,9 +95,13 @@ async def test_sentinel_works_with_key_manager_interface():
     # Create required storage provider
     storage_provider = InMemoryStorageProvider()
 
+    # Create envelope tracker for Sentinel
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+
     # Sentinel should work with any KeyManager implementation
     # No specific type checking for DefaultKeyManager anymore
-    sentinel = Sentinel(security_manager=node_security, storage_provider=storage_provider)
+    sentinel = Sentinel(security_manager=node_security, storage_provider=storage_provider, delivery_tracker=delivery_tracker)
 
     # Verify the key manager is accessible and is a KeyManager
     assert isinstance(sentinel._security_manager.key_manager, KeyManager)

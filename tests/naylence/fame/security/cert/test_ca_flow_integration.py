@@ -55,15 +55,22 @@ async def test_root_node_ca_certificate_flow():
             from naylence.fame.node.node_meta import NodeMeta
             from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
             from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+            from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
             storage_provider = InMemoryStorageProvider()
             node_meta_store = InMemoryKVStore(NodeMeta)
+            
+            # Create envelope tracker
+            delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+            delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+            
             node = FameNode(
                 has_parent=False,
                 requested_logicals=["test.root.service"],
                 security_manager=security_manager,
                 storage_provider=storage_provider,
                 node_meta_store=node_meta_store,
+                delivery_tracker=delivery_tracker,
             )
 
             print(f"   ✓ Root node created with ID: {node._id}")
@@ -244,15 +251,22 @@ async def test_root_node_raw_key_no_certificate_flow():
         from naylence.fame.node.node_meta import NodeMeta
         from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+        from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore(NodeMeta)
+        
+        # Create envelope tracker
+        delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+        delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+        
         node = FameNode(
             has_parent=False,
             requested_logicals=["test.root.service"],
             security_manager=security_manager,
             storage_provider=storage_provider,
             node_meta_store=node_meta_store,
+            delivery_tracker=delivery_tracker,
         )
 
         print(f"   ✓ Root node created with ID: {node._id}")

@@ -41,23 +41,36 @@ async def test_policy_driven_key_management():
 
     # Test 3: FameNode uses key_manager from SecurityManager when it exists
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
+    
+    # Create delivery tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     node_with_key_manager = FameNode(
         system_id="test_node_with_key_manager",
         security_manager=signing_security,  # This one has a key manager
         storage_provider=storage_provider,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker,
     )
     assert node_with_key_manager._security_manager.key_manager is not None
     
     # Test 4: FameNode doesn't have key_manager when policy doesn't require it
     storage_provider2 = InMemoryStorageProvider()
+    
+    # Create delivery tracker for second node
+    delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
+    delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
+    
     node_without_key_manager = FameNode(
         system_id="test_node_without_key_manager",
         security_manager=default_security,  # This one doesn't have a key manager
         storage_provider=storage_provider2,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker2,
     )
     assert node_without_key_manager._security_manager.key_manager is None
 
@@ -85,13 +98,20 @@ async def test_node_security_key_manager_priority():
     assert security_with_key_manager.key_manager is not None
 
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
+    
+    # Create delivery tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     node_with_key_manager = FameNode(
         system_id="test_node_with_key_manager",
         security_manager=security_with_key_manager,
         storage_provider=storage_provider,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker,
     )
 
     # Should use the key_manager from SecurityManager
@@ -102,11 +122,17 @@ async def test_node_security_key_manager_priority():
     assert default_security.key_manager is None
 
     storage_provider2 = InMemoryStorageProvider()
+    
+    # Create delivery tracker for second node
+    delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
+    delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
+    
     node_without_key_manager = FameNode(
         system_id="test_node_without_key_manager",
         security_manager=default_security,
         storage_provider=storage_provider2,
         node_meta_store=InMemoryKVStore[NodeMeta](NodeMeta),
+        delivery_tracker=delivery_tracker2,
     )
 
     # Should have no key manager

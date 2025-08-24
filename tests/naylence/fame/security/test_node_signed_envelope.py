@@ -94,11 +94,20 @@ async def node(signer_verifier):
     )
 
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
     node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
+    
+    # Create envelope tracker
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+    
     return FameNode(
-        security_manager=node_security, storage_provider=storage_provider, node_meta_store=node_meta_store
+        security_manager=node_security, 
+        storage_provider=storage_provider, 
+        node_meta_store=node_meta_store,
+        delivery_tracker=delivery_tracker,
     )
 
 

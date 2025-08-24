@@ -158,7 +158,7 @@ async def test_address_bind_ack_signature_mirroring_integration():
         assert isinstance(ack_envelope.frame, AddressBindAckFrame)
         assert ack_envelope.frame.address == FameAddress("service@/test/path")
         assert ack_envelope.corr_id == "test-corr-123"
-        assert ack_envelope.frame.success is True
+        assert ack_envelope.frame.ok is True
 
         print("✅ AddressBindAck signature mirroring integration test passed!")
 
@@ -276,7 +276,7 @@ async def test_address_bind_ack_no_signature_mirroring_for_unsigned_request():
         assert isinstance(ack_envelope.frame, AddressBindAckFrame)
         assert ack_envelope.frame.address == FameAddress("service@/test/path")
         assert ack_envelope.corr_id == "test-corr-789"
-        assert ack_envelope.frame.success is True
+        assert ack_envelope.frame.ok is True
 
         print("✅ AddressBindAck unsigned request test passed!")
 

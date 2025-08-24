@@ -37,6 +37,14 @@ async def test_encryption_key_id_in_address_bind():
 
     binding_store = InMemoryKVStore(BindingStoreEntry)
 
+    # Create a delivery tracker for the binding manager
+    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
+    from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
+
+    storage_provider = InMemoryStorageProvider()
+    delivery_tracker_factory = DefaultDeliveryTrackerFactory()
+    delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
+
     # Create binding manager with encryption key ID function
     binding_manager = BindingManager(
         has_upstream=True,
@@ -49,6 +57,7 @@ async def test_encryption_key_id_in_address_bind():
         binding_store=binding_store,
         envelope_factory=envelope_factory,
         ack_timeout_ms=5000,
+        delivery_tracker=delivery_tracker,
     )
 
     # Create a test address to bind
