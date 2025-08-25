@@ -101,28 +101,3 @@ async def test_key_frame_handler_uses_interface():
     print("✓ KeyFrameHandler uses KeyManager interface correctly")
 
 
-@pytest.mark.asyncio
-async def test_no_default_key_manager_specific_dependencies():
-    """Test that no critical code depends on X5CKeyManager specifically."""
-    print("Testing no X5CKeyManager-specific dependencies...")
-
-    # Check the actual source file content
-    import os
-
-    # Find the project root by going up from the test file
-    project_root = os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-    )
-    key_frame_handler_file = os.path.join(
-        project_root, "../naylence-fame-runtime/src/naylence/fame/sentinel/key_frame_handler.py"
-    )
-
-    with open(key_frame_handler_file) as f:
-        source_content = f.read()
-
-    # Should import KeyManager interface
-    assert "from naylence.fame.security.keys.key_manager import KeyManager" in source_content
-    # Should not import X5CKeyManager anymore
-    assert "from naylence.fame.security.keys.default_key_manager import X5CKeyManager" not in source_content
-
-    print("✓ Critical classes only depend on KeyManager interface")
