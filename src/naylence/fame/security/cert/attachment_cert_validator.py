@@ -8,8 +8,8 @@ both sides trust each other's certificates before establishing the connection.
 
 from __future__ import annotations
 
-from datetime import datetime
 import os
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from naylence.fame.security.keys.attachment_key_validator import (
@@ -24,6 +24,7 @@ logger = getLogger(__name__)
 
 class CertKeyInfo(KeyInfo):
     """Metadata about a validated key/certificate."""
+
     not_before: Optional[datetime] = None
     cert_subject: Optional[str] = None
     cert_issuer: Optional[str] = None
@@ -51,7 +52,7 @@ class AttachmentCertValidator(AttachmentKeyValidator):
     async def validate_key(self, key: Dict[str, Any]) -> KeyInfo:
         """Validate a single JWK and return KeyInfo; raise KeyValidationError on failure."""
         kid = key.get("kid")
-        
+
         # Keys without certificates are allowed; return basic info
         if "x5c" not in key:
             return KeyInfo(kid=kid)
@@ -77,8 +78,8 @@ class AttachmentCertValidator(AttachmentKeyValidator):
 
         try:
             from naylence.fame.security.cert.util import (
-                validate_jwk_x5c_certificate,
                 _validate_chain,
+                validate_jwk_x5c_certificate,
             )
 
             is_valid, error_msg = validate_jwk_x5c_certificate(
@@ -87,7 +88,7 @@ class AttachmentCertValidator(AttachmentKeyValidator):
                 enforce_name_constraints=self.enforce_name_constraints,
                 strict=self.strict_validation,
             )
-            
+
             if not is_valid:
                 raise KeyValidationError(
                     code="certificate_invalid",
@@ -102,11 +103,11 @@ class AttachmentCertValidator(AttachmentKeyValidator):
                 trust_store_pem=trust_store_pem,
                 return_cert=True,
             )
-            
+
             # Use UTC-aware properties preferentially to avoid deprecation warnings
             expires_at = getattr(cert, "not_valid_after_utc", None)
             not_before = getattr(cert, "not_valid_before_utc", None)
-            
+
             subject = None
             issuer = None
             try:
@@ -114,7 +115,7 @@ class AttachmentCertValidator(AttachmentKeyValidator):
                 issuer = cert.issuer.rfc4514_string()
             except Exception:
                 pass
-            
+
             return CertKeyInfo(
                 kid=kid,
                 expires_at=expires_at,
@@ -122,7 +123,7 @@ class AttachmentCertValidator(AttachmentKeyValidator):
                 cert_subject=subject,
                 cert_issuer=issuer,
             )
-            
+
         except KeyValidationError:
             raise
         except Exception as e:

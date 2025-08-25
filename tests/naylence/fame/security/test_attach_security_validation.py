@@ -32,7 +32,7 @@ async def test_attach_validation_with_signing_requirements():
         inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED),
         response=ResponseSigningRules(mirror_request_signing=True),
     )
-    
+
     encryption_config = EncryptionConfig(
         outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL),
         inbound=InboundCryptoRules(allow_channel=True, allow_sealed=True, allow_plaintext=False),

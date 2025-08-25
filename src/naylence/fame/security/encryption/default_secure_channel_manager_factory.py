@@ -8,12 +8,11 @@ from typing import Any, Optional
 
 from pydantic import Field
 
+from naylence.fame.security.encryption.secure_channel_manager import SecureChannelManager
 from naylence.fame.security.encryption.secure_channel_manager_factory import (
     SecureChannelManagerConfig,
     SecureChannelManagerFactory,
 )
-
-from naylence.fame.security.encryption.secure_channel_manager import SecureChannelManager
 
 
 class DefaultSecureChannelManagerConfig(SecureChannelManagerConfig):

@@ -199,11 +199,11 @@ async def test_node_integration():
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
 
     storage_provider = InMemoryStorageProvider()
-    
+
     # Create envelope tracker
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()
     delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-    
+
     node = FameNode(
         system_id="test-node",
         security_manager=node_security,

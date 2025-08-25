@@ -18,11 +18,11 @@ async def test_optional_signature_policy():
     # Create a policy similar to your config - optional signatures with outbound signing
     # Outbound signing is needed to create a key manager which is required for verifier
     from naylence.fame.security.policy.security_policy import OutboundSigningRules
-    
+
     optional_policy = DefaultSecurityPolicy(
         signing=SigningConfig(
             inbound=InboundSigningRules(signature_policy=SignaturePolicy.OPTIONAL),
-            outbound=OutboundSigningRules(default_signing=True)  # This creates key manager
+            outbound=OutboundSigningRules(default_signing=True),  # This creates key manager
         )
     )
 

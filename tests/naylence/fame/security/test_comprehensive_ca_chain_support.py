@@ -14,9 +14,12 @@ from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-from naylence.fame.security.fastapi.ca_signing_router import CertificateSigningRequest, LocalCASigningService
 from naylence.fame.security.cert.util import public_key_from_x5c
 from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
+from naylence.fame.security.fastapi.ca_signing_router import (
+    CertificateSigningRequest,
+    LocalCASigningService,
+)
 
 
 async def test_ca_service_with_arbitrary_chains():

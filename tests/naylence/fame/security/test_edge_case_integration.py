@@ -408,12 +408,14 @@ class TestSecurityPolicyEdgeCases:
 
         # Create policy that requires verification to trigger verifier creation
         from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
-        from naylence.fame.security.policy.security_policy import SigningConfig, InboundSigningRules, SignaturePolicy
+        from naylence.fame.security.policy.security_policy import (
+            InboundSigningRules,
+            SignaturePolicy,
+            SigningConfig,
+        )
 
         policy_with_verification = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED)
-            )
+            signing=SigningConfig(inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED))
         )
 
         manager = DefaultSecurityManager(policy=policy_with_verification)
@@ -436,10 +438,14 @@ class TestSecurityPolicyEdgeCases:
         # but no verifier exists. In test environments, this may return None due to
         # missing security infrastructure, which is acceptable behavior
         print(f"Result: {result}")
-        print(f"Has envelope security handler: {hasattr(manager, '_envelope_security_handler') and manager._envelope_security_handler}")
-        
+        print(
+            f"Has envelope security handler: {
+                hasattr(manager, '_envelope_security_handler') and manager._envelope_security_handler
+            }"
+        )
+
         # Check if envelope security handler exists and would handle verification
-        if hasattr(manager, '_envelope_security_handler') and manager._envelope_security_handler:
+        if hasattr(manager, "_envelope_security_handler") and manager._envelope_security_handler:
             # Since there's no verifier but signature is required, the envelope may be rejected
             # The key test is that it doesn't crash, and we can verify if delivery was attempted
             mock_node.deliver_local.assert_called_once_with(address, envelope, context)
@@ -581,15 +587,17 @@ class TestErrorHandlingComprehensive:
     @pytest.mark.asyncio
     async def test_envelope_verifier_exception_handling(self, mock_node, security_policy):
         """Test envelope verifier exception handling."""
-        
-        # Create policy that requires verification to trigger verifier creation  
+
+        # Create policy that requires verification to trigger verifier creation
         from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
-        from naylence.fame.security.policy.security_policy import SigningConfig, InboundSigningRules, SignaturePolicy
-        
+        from naylence.fame.security.policy.security_policy import (
+            InboundSigningRules,
+            SignaturePolicy,
+            SigningConfig,
+        )
+
         policy_with_verification = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED)
-            )
+            signing=SigningConfig(inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED))
         )
 
         # Create verifier that raises exception
@@ -611,9 +619,9 @@ class TestErrorHandlingComprehensive:
         # The exception should be raised when verification is attempted
         # If verification doesn't happen during on_deliver_local, verify the verifier was called
         try:
-            result = await manager.on_deliver_local(mock_node, address, envelope, context)
+            await manager.on_deliver_local(mock_node, address, envelope, context)
             # If no exception was raised, check if envelope security handler exists
-            if hasattr(manager, '_envelope_security_handler') and manager._envelope_security_handler:
+            if hasattr(manager, "_envelope_security_handler") and manager._envelope_security_handler:
                 # If verification doesn't happen during on_deliver_local, verify the verifier was called
                 # This means the verification logic is working but may be handling errors differently
                 mock_verifier.verify_envelope.assert_called_once()

@@ -139,16 +139,18 @@ async def test_channel_vs_sealed_precedence_in_real_scenario():
 
     # Create a policy that supports encryption responses
     from naylence.fame.security.policy.security_policy import (
-        EncryptionConfig, ResponseCryptoRules, InboundCryptoRules
+        EncryptionConfig,
+        InboundCryptoRules,
+        ResponseCryptoRules,
     )
-    
+
     encryption_policy = DefaultSecurityPolicy(
         encryption=EncryptionConfig(
             inbound=InboundCryptoRules(allow_sealed=True, allow_channel=True, allow_plaintext=True),
             response=ResponseCryptoRules(
                 mirror_request_level=True,  # Mirror the request level
-                minimum_response_level=CryptoLevel.PLAINTEXT
-            )
+                minimum_response_level=CryptoLevel.PLAINTEXT,
+            ),
         )
     )
 

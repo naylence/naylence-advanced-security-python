@@ -83,7 +83,7 @@ def create_test_cert_and_key():
         sid_value = "test-node-123"
         der_encoded = struct.pack("BB", 0x0C, len(sid_value)) + sid_value.encode("utf-8")
         sid_other_name = x509.OtherName(sid_oid, der_encoded)
-        san_list.append(sid_other_name) # type: ignore
+        san_list.append(sid_other_name)  # type: ignore
     except (ImportError, Exception):
         # Just use URI format as fallback
         san_list.append(x509.UniformResourceIdentifier("naylence://sid/test-node-123"))

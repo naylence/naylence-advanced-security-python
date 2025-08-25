@@ -9,8 +9,8 @@ from unittest.mock import Mock
 import pytest
 
 from naylence.fame.node.node_event_listener import NodeEventListener
-from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.security.keys.in_memory_key_store import InMemoryKeyStore
+from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 
 
 class MockNode:

@@ -101,7 +101,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
     try:
         # This should fail - invalid certificate
         try:
-            key_infos = await cert_validator.validate_keys([invalid_jwk_with_cert])
+            await cert_validator.validate_keys([invalid_jwk_with_cert])
             is_valid = True
             error = ""
         except Exception as e:
@@ -139,7 +139,7 @@ async def test_no_trust_store_configured(cert_validator):
     try:
         # This should pass with warning - no trust store configured
         try:
-            key_infos = await cert_validator.validate_keys([valid_jwk_with_cert])
+            await cert_validator.validate_keys([valid_jwk_with_cert])
             is_valid = True
             error = ""
         except Exception as e:
@@ -180,7 +180,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
     try:
         mixed_keys = [jwk_without_cert, invalid_jwk_with_cert]
         try:
-            key_infos = await cert_validator.validate_keys(mixed_keys)
+            await cert_validator.validate_keys(mixed_keys)
             is_valid = True
             error = ""
         except Exception as e:
@@ -218,7 +218,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
 
         # Child validation (server side)
         try:
-            child_key_infos = await cert_validator.validate_keys(valid_child_keys)
+            await cert_validator.validate_keys(valid_child_keys)
             child_valid = True
             child_error = ""
         except Exception as e:
@@ -228,7 +228,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
 
         # Parent validation (client side)
         try:
-            parent_key_infos = await cert_validator.validate_keys(valid_parent_keys)
+            await cert_validator.validate_keys(valid_parent_keys)
             parent_valid = True
             parent_error = ""
         except Exception as e:
@@ -240,7 +240,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
         invalid_child_keys = [{"kty": "RSA", "kid": "child-2", "use": "sig", "x5c": ["invalid-cert-data"]}]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(invalid_child_keys)
+            await cert_validator.validate_keys(invalid_child_keys)
             child_valid = True
             child_error = ""
         except Exception as e:
@@ -254,7 +254,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
         ]
 
         try:
-            parent_key_infos = await cert_validator.validate_keys(invalid_parent_keys)
+            await cert_validator.validate_keys(invalid_parent_keys)
             parent_valid = True
             parent_error = ""
         except Exception as e:

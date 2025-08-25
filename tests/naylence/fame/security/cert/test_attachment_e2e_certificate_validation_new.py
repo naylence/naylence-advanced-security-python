@@ -7,9 +7,7 @@ to a parent node, and verifies that certificate validation happens correctly
 during the attachment handshake using the new validate_keys() API.
 """
 
-import asyncio
 import os
-import sys
 
 
 async def test_attachment_e2e_with_certificates():
@@ -31,12 +29,16 @@ test_certificate_data_here_for_testing_purposes_only
     try:
         # Test the attachment validation functions work as expected
         from naylence.fame.core import create_resource
-        from naylence.fame.security.cert.attachment_cert_validator_factory import AttachmentCertValidatorConfig
-        from naylence.fame.security.keys.attachment_key_validator_factory import AttachmentKeyValidatorFactory
+        from naylence.fame.security.cert.attachment_cert_validator_factory import (
+            AttachmentCertValidatorConfig,
+        )
         from naylence.fame.security.keys.attachment_key_validator import KeyValidationError
+        from naylence.fame.security.keys.attachment_key_validator_factory import (
+            AttachmentKeyValidatorFactory,
+        )
 
         print("1. Testing successful attachment with no certificates...")
-        
+
         # Create validator instance
         config = AttachmentCertValidatorConfig()
         cert_validator = await create_resource(AttachmentKeyValidatorFactory, config)
@@ -55,7 +57,7 @@ test_certificate_data_here_for_testing_purposes_only
 
         # Simulate server-side validation (parent validating child)
         try:
-            child_key_infos = await cert_validator.validate_keys(child_keys_no_cert)
+            await cert_validator.validate_keys(child_keys_no_cert)
             child_valid = True
             child_error = ""
         except KeyValidationError as e:
@@ -65,7 +67,7 @@ test_certificate_data_here_for_testing_purposes_only
 
         # Simulate client-side validation (child validating parent)
         try:
-            parent_key_infos = await cert_validator.validate_keys(parent_keys_no_cert)
+            await cert_validator.validate_keys(parent_keys_no_cert)
             parent_valid = True
             parent_error = ""
         except KeyValidationError as e:
@@ -93,7 +95,7 @@ test_certificate_data_here_for_testing_purposes_only
         ]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(child_keys_invalid_cert)
+            await cert_validator.validate_keys(child_keys_invalid_cert)
             child_valid = True
             child_error = ""
         except KeyValidationError as e:
@@ -121,7 +123,7 @@ test_certificate_data_here_for_testing_purposes_only
         ]
 
         try:
-            parent_key_infos = await cert_validator.validate_keys(parent_keys_invalid_cert)
+            await cert_validator.validate_keys(parent_keys_invalid_cert)
             parent_valid = True
             parent_error = ""
         except KeyValidationError as e:
@@ -150,7 +152,7 @@ test_certificate_data_here_for_testing_purposes_only
         ]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(mixed_child_keys)
+            await cert_validator.validate_keys(mixed_child_keys)
             child_valid = True
             child_error = ""
         except KeyValidationError as e:
@@ -178,7 +180,7 @@ test_certificate_data_here_for_testing_purposes_only
         ]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(child_with_cert)
+            await cert_validator.validate_keys(child_with_cert)
             child_valid = True
             child_error = ""
         except KeyValidationError as e:
@@ -219,8 +221,12 @@ async def test_node_component_integration():
         print("1. Verifying attachment validation functions exist and are importable...")
 
         from naylence.fame.core import create_resource
-        from naylence.fame.security.cert.attachment_cert_validator_factory import AttachmentCertValidatorConfig
-        from naylence.fame.security.keys.attachment_key_validator_factory import AttachmentKeyValidatorFactory
+        from naylence.fame.security.cert.attachment_cert_validator_factory import (
+            AttachmentCertValidatorConfig,
+        )
+        from naylence.fame.security.keys.attachment_key_validator_factory import (
+            AttachmentKeyValidatorFactory,
+        )
 
         print("  ✓ Attachment validation functions available")
 
@@ -245,7 +251,7 @@ async def test_node_component_integration():
         # Test with environment variable set
         os.environ["FAME_CA_CERTS"] = "test-ca-cert"
         try:
-            key_infos = await cert_validator.validate_keys(None)
+            await cert_validator.validate_keys(None)
             print("  ✓ Environment variable properly read")
         except Exception:
             print("  ✓ Environment variable properly handled")
@@ -253,7 +259,7 @@ async def test_node_component_integration():
         # Test without environment variable
         del os.environ["FAME_CA_CERTS"]
         try:
-            key_infos = await cert_validator.validate_keys(None)
+            await cert_validator.validate_keys(None)
             print("  ✓ Graceful handling when environment variable not set")
         except Exception:
             print("  ✓ Graceful handling when environment variable not set")
@@ -295,7 +301,3 @@ async def main():
 
         traceback.print_exc()
         return 1
-
-
-if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))

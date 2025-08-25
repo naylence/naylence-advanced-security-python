@@ -6,10 +6,10 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from naylence.fame.security.keys.key_store import KeyStore, KeyStoreConfig
-
 from naylence.fame.security.keys.key_manager import KeyManager
 from naylence.fame.security.keys.key_manager_factory import KeyManagerConfig, KeyManagerFactory
+from naylence.fame.security.keys.key_store import KeyStore
+from naylence.fame.security.keys.key_store_factory import KeyStoreConfig
 
 
 class X5CKeyManagerConfig(KeyManagerConfig):
@@ -23,7 +23,7 @@ class X5CKeyManagerConfig(KeyManagerConfig):
 
     # Optional overrides for advanced use cases
     key_store: Optional[KeyStoreConfig] = None
-    
+
     model_config = {"arbitrary_types_allowed": True}
 
 

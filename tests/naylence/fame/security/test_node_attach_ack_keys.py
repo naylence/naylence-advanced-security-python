@@ -73,11 +73,13 @@ def test_node_attach_ack_keys():
         assert len(keys) == 2, f"Expected 2 keys, got {len(keys)}"
         assert len(signing_keys) == 1, f"Expected 1 signing key, got {len(signing_keys)}"
         assert len(encryption_keys) == 1, f"Expected 1 encryption key, got {len(encryption_keys)}"
-        
+
         # Certificate provisioning may not work in test environment
         # The important part is that we have the right key types and structure
-        print(f"  Certificate keys: {len(cert_keys)} (certificates may not be available in test environment)")
-        
+        print(
+            f"  Certificate keys: {len(cert_keys)} (certificates may not be available in test environment)"
+        )
+
         # Test passes if we have the required key structure, certificates are optional in test env
 
         print("✓ NodeAttachAck key generation test passed!")

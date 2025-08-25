@@ -37,12 +37,14 @@ class DebugChannelEncryptionPolicy(DefaultSecurityPolicy):
 
     def __init__(self):
         # Create policy that requires channel encryption to trigger creation of encryption managers
-        from naylence.fame.security.policy.security_policy import EncryptionConfig, OutboundCryptoRules, CryptoLevel
-        
+        from naylence.fame.security.policy.security_policy import (
+            CryptoLevel,
+            EncryptionConfig,
+            OutboundCryptoRules,
+        )
+
         super().__init__(
-            encryption=EncryptionConfig(
-                outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
-            )
+            encryption=EncryptionConfig(outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL))
         )
 
     def should_use_channel_encryption(self, envelope: FameEnvelope, context: FameDeliveryContext) -> bool:
@@ -78,11 +80,11 @@ async def test_debug_channel_encryption():
 
     storage_provider1 = InMemoryStorageProvider()
     node_meta_store1 = InMemoryKVStore[NodeMeta](NodeMeta)
-    
+
     # Create envelope tracker for sender node
     delivery_tracker_factory1 = DefaultDeliveryTrackerFactory()
     delivery_tracker1 = await delivery_tracker_factory1.create(storage_provider=storage_provider1)
-    
+
     sender_node = FameNode(
         system_id="debug-sender",
         security_manager=sender_security,
@@ -96,11 +98,11 @@ async def test_debug_channel_encryption():
     )
     storage_provider2 = InMemoryStorageProvider()
     node_meta_store2 = InMemoryKVStore[NodeMeta](NodeMeta)
-    
+
     # Create envelope tracker for receiver node
     delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
     delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
-    
+
     receiver_node = FameNode(
         system_id="debug-receiver",
         security_manager=receiver_security,

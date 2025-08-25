@@ -129,7 +129,9 @@ class CompositeEncryptionManager(EncryptionManager, NodeEventListener):
                     algorithm=algorithm,
                 )
             except Exception as e:
-                logger.error("failed_to_create_composite_encryption_manager", factory=factory_key, error=str(e))
+                logger.error(
+                    "failed_to_create_composite_encryption_manager", factory=factory_key, error=str(e)
+                )
                 return None
 
         return self._manager_instances.get(factory_key)
@@ -161,7 +163,9 @@ class CompositeEncryptionManager(EncryptionManager, NodeEventListener):
                 )
             except Exception as e:
                 logger.error(
-                    "failed_to_create_composite_encryption_manager", factory=factory_key, error=str(e),
+                    "failed_to_create_composite_encryption_manager",
+                    factory=factory_key,
+                    error=str(e),
                 )
                 return None
 

@@ -3,9 +3,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.security.keys.in_memory_key_store import InMemoryKeyStore
 from naylence.fame.security.keys.key_manager import KeyManager
+from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.sentinel.key_frame_handler import KeyFrameHandler
 from naylence.fame.sentinel.sentinel import Sentinel
 from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
@@ -41,15 +41,13 @@ async def test_sentinel_works_with_key_manager_interface():
     # Verify Sentinel can be created with any KeyManager implementation
     # (Previously it required specifically X5CKeyManager)
     from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
-    from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+    from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
 
     # Create a policy that requires key management (signing requires key management)
     policy_with_key_mgmt = DefaultSecurityPolicy(
-        signing=SigningConfig(
-            outbound=OutboundSigningRules(default_signing=True)
-        )
+        signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
     )
 
     # Create SecurityManager with the key manager
@@ -64,7 +62,9 @@ async def test_sentinel_works_with_key_manager_interface():
 
     # Sentinel should work with any KeyManager implementation
     # No specific type checking for X5CKeyManager anymore
-    sentinel = Sentinel(security_manager=node_security, storage_provider=storage_provider, delivery_tracker=delivery_tracker)
+    sentinel = Sentinel(
+        security_manager=node_security, storage_provider=storage_provider, delivery_tracker=delivery_tracker
+    )
 
     # Verify the key manager is accessible and is a KeyManager
     assert isinstance(sentinel._security_manager.key_manager, KeyManager)
@@ -113,7 +113,9 @@ async def test_no_default_key_manager_specific_dependencies():
     project_root = os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
     )
-    key_frame_handler_file = os.path.join(project_root, "../naylence-fame-runtime/src/naylence/fame/sentinel/key_frame_handler.py")
+    key_frame_handler_file = os.path.join(
+        project_root, "../naylence-fame-runtime/src/naylence/fame/sentinel/key_frame_handler.py"
+    )
 
     with open(key_frame_handler_file) as f:
         source_content = f.read()
@@ -121,23 +123,6 @@ async def test_no_default_key_manager_specific_dependencies():
     # Should import KeyManager interface
     assert "from naylence.fame.security.keys.key_manager import KeyManager" in source_content
     # Should not import X5CKeyManager anymore
-    assert (
-        "from naylence.fame.security.keys.default_key_manager import X5CKeyManager"
-        not in source_content
-    )
+    assert "from naylence.fame.security.keys.default_key_manager import X5CKeyManager" not in source_content
 
     print("✓ Critical classes only depend on KeyManager interface")
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def run_tests():
-        await test_key_manager_interface_completeness()
-        await test_default_key_manager_implements_interface()
-        await test_sentinel_works_with_key_manager_interface()
-        await test_key_frame_handler_uses_interface()
-        await test_no_default_key_manager_specific_dependencies()
-        print("\n🎉 All interface tests passed! KeyManager interface is complete and properly used.")
-
-    asyncio.run(run_tests())

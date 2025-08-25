@@ -15,11 +15,11 @@ from naylence.fame.sentinel.load_balancing_strategy import (
     StickyLoadBalancingStrategy,
 )
 from naylence.fame.sentinel.sentinel_factory import SentinelConfig, SentinelFactory
-
 from naylence.fame.stickiness.aft_load_balancer_stickiness_manager import AFTLoadBalancerStickinessManager
-from naylence.fame.stickiness.aft_load_balancer_stickiness_manager_factory import AFTLoadBalancerStickinessManagerConfig
+from naylence.fame.stickiness.aft_load_balancer_stickiness_manager_factory import (
+    AFTLoadBalancerStickinessManagerConfig,
+)
 from naylence.fame.stickiness.stickiness_mode import StickinessMode
-
 
 
 async def test_sentinel_factory_with_stickiness():
@@ -43,7 +43,7 @@ async def test_sentinel_factory_with_stickiness():
     print("   ✅ Sentinel created with stickiness enabled")
 
     # 3. Verify routing policy structure
-    routing_policy = sentinel_with_stickiness._routing_policy # type: ignore
+    routing_policy = sentinel_with_stickiness._routing_policy  # type: ignore
     assert isinstance(routing_policy, CompositeRoutingPolicy)
     print("   ✅ Routing policy is CompositeRoutingPolicy")
 
@@ -69,7 +69,7 @@ async def test_sentinel_factory_with_stickiness():
     print("   ✅ First strategy is StickyLoadBalancingStrategy")
 
     # 6. Verify stickiness manager is registered as event listener
-    event_listeners = sentinel_with_stickiness._event_listeners # type: ignore
+    event_listeners = sentinel_with_stickiness._event_listeners  # type: ignore
     stickiness_listeners = [
         listener for listener in event_listeners if isinstance(listener, AFTLoadBalancerStickinessManager)
     ]
@@ -87,7 +87,7 @@ async def test_sentinel_factory_with_stickiness():
     print("   ✅ Sentinel created with stickiness disabled")
 
     # 8. Verify no stickiness manager in event listeners
-    event_listeners = sentinel_without_stickiness._event_listeners or [] # type: ignore
+    event_listeners = sentinel_without_stickiness._event_listeners or []  # type: ignore
     stickiness_listeners = [
         listener for listener in event_listeners if isinstance(listener, AFTLoadBalancerStickinessManager)
     ]

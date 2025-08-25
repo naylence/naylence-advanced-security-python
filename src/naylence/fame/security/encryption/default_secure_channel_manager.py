@@ -9,10 +9,12 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-from naylence.fame.core import DataFrame, SecureAcceptFrame, SecureCloseFrame, SecureOpenFrame, generate_id
+from naylence.fame.core import DataFrame, SecureAcceptFrame, SecureCloseFrame, SecureOpenFrame
+from naylence.fame.security.encryption.secure_channel_manager import (
+    SecureChannelManager,
+    SecureChannelState,
+)
 from naylence.fame.util.logging import getLogger
-
-from naylence.fame.security.encryption.secure_channel_manager import SecureChannelManager, SecureChannelState
 
 logger = getLogger(__name__)
 
@@ -48,7 +50,9 @@ class DefaultSecureChannelManager(SecureChannelManager):
         logger.debug("generated_channel_open", cid=cid, algorithm=algorithm)
 
         return SecureOpenFrame(
-            cid=cid, eph_pub=pub_bytes, alg=algorithm,
+            cid=cid,
+            eph_pub=pub_bytes,
+            alg=algorithm,
             # corr_id=generate_id()
         )
 
@@ -94,9 +98,7 @@ class DefaultSecureChannelManager(SecureChannelManager):
 
         logger.debug("channel_established", cid=frame.cid, algorithm=frame.alg)
 
-        return SecureAcceptFrame(
-            cid=frame.cid, eph_pub=my_pub_bytes, alg=frame.alg, ok=True
-        )
+        return SecureAcceptFrame(cid=frame.cid, eph_pub=my_pub_bytes, alg=frame.alg, ok=True)
 
     async def handle_accept_frame(self, frame: SecureAcceptFrame) -> bool:
         """Handle incoming SecureAcceptFrame to complete handshake."""

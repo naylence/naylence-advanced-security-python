@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from naylence.fame.core import DataFrame, SigningMaterial
+from naylence.fame.core import DataFrame
 from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
 
 # Import test utilities

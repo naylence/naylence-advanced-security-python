@@ -291,9 +291,7 @@ async def test_signing_key_request_no_stickiness():
     )
 
     # Create KeyRequest frame for signing key
-    key_request_frame = KeyRequestFrame(
-        kid="test-sign-key-123", physical_path="/test/path"
-    )
+    key_request_frame = KeyRequestFrame(kid="test-sign-key-123", physical_path="/test/path")
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)
@@ -362,9 +360,7 @@ async def test_child_node_key_request_stickiness():
     security_manager = DefaultSecurityManager(policy=MagicMock(), key_manager=key_manager)
 
     # Create KeyRequest frame by key ID
-    key_request_frame = KeyRequestFrame(
-        kid="child-enc-key-456", physical_path="/child/path"
-    )
+    key_request_frame = KeyRequestFrame(kid="child-enc-key-456", physical_path="/child/path")
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)
@@ -407,9 +403,7 @@ async def test_child_node_signing_key_no_stickiness():
     security_manager = DefaultSecurityManager(policy=MagicMock(), key_manager=mock_key_manager)
 
     # Create KeyRequest frame by address (will trigger signature key fallback)
-    key_request_frame = KeyRequestFrame(
-        address=FameAddress("service@/child/path"), physical_path=None
-    )
+    key_request_frame = KeyRequestFrame(address=FameAddress("service@/child/path"), physical_path=None)
 
     # Create envelope
     envelope = create_fame_envelope(frame=key_request_frame)

@@ -39,7 +39,7 @@ async def test_end_to_end_key_request_flow():
     from naylence.fame.security.keys.key_provider import get_key_provider
 
     manager = CompositeEncryptionManager(
-        secure_channel_manager=mock_secure_channel_manager, # type: ignore
+        secure_channel_manager=mock_secure_channel_manager,  # type: ignore
         node_like=node_like,
         key_provider=get_key_provider(),
     )
@@ -99,7 +99,7 @@ async def test_end_to_end_key_request_flow():
             return test_key_data
         return original_get_key(kid)
 
-    key_provider.get_key = mock_get_key # type: ignore
+    key_provider.get_key = mock_get_key  # type: ignore
 
     # Step 4: Notify that key is available - should replay envelope
     print(f"🔔 Step 4: Notifying key available for {test_kid}...")
@@ -166,7 +166,7 @@ async def test_key_requests_are_signed():
 
     mock_secure_channel_manager = MockSecureChannelManager()
     manager = CompositeEncryptionManager(
-        secure_channel_manager=mock_secure_channel_manager, # type: ignore
+        secure_channel_manager=mock_secure_channel_manager,  # type: ignore
         node_like=node_like,
         key_provider=get_key_provider(),
     )

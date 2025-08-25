@@ -77,13 +77,15 @@ async def node(signer_verifier):
 
     # Create SecurityManager object using from_policy for proper initialization
     from naylence.fame.security.policy import DefaultSecurityPolicy
-    from naylence.fame.security.policy.security_policy import SigningConfig, InboundSigningRules, SignaturePolicy
+    from naylence.fame.security.policy.security_policy import (
+        InboundSigningRules,
+        SignaturePolicy,
+        SigningConfig,
+    )
 
     # Create policy that requires verification to enable envelope security handler
     policy_with_verification = DefaultSecurityPolicy(
-        signing=SigningConfig(
-            inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED)
-        )
+        signing=SigningConfig(inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED))
     )
 
     node_security = await SecurityManagerFactory.create_security_manager(
@@ -98,14 +100,14 @@ async def node(signer_verifier):
 
     storage_provider = InMemoryStorageProvider()
     node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
-    
+
     # Create envelope tracker
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()
     delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-    
+
     return FameNode(
-        security_manager=node_security, 
-        storage_provider=storage_provider, 
+        security_manager=node_security,
+        storage_provider=storage_provider,
         node_meta_store=node_meta_store,
         delivery_tracker=delivery_tracker,
     )
@@ -236,9 +238,13 @@ async def test_node_handles_encrypted_and_signed_envelope(node, signer_verifier)
         from naylence.fame.core import FameDeliveryContext
 
         ctx = FameDeliveryContext(origin_type=DeliveryOriginType.LOCAL, from_system_id=sid)
-        
+
         # Check if node has envelope security handler for decryption
-        if hasattr(node, '_security_manager') and hasattr(node._security_manager, 'envelope_security_handler') and node._security_manager.envelope_security_handler:
+        if (
+            hasattr(node, "_security_manager")
+            and hasattr(node._security_manager, "envelope_security_handler")
+            and node._security_manager.envelope_security_handler
+        ):
             await node.deliver(encrypted_env, ctx)
             await asyncio.wait_for(event.wait(), timeout=2)
             assert delivered["payload"] == "test payload"

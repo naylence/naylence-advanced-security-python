@@ -91,11 +91,11 @@ async def test_key_exchange_required_for_encryption_or_signing():
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
 
     storage_provider = InMemoryStorageProvider()
-    
+
     # Create envelope tracker for first node
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()
     delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-    
+
     node_with_crypto = FameNode(
         system_id="test_crypto",
         security_manager=encryption_security,
@@ -106,11 +106,11 @@ async def test_key_exchange_required_for_encryption_or_signing():
     assert node_with_crypto._security_manager.key_manager is not None
 
     storage_provider2 = InMemoryStorageProvider()
-    
+
     # Create envelope tracker for second node
     delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
     delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
-    
+
     node_without_crypto = FameNode(
         system_id="test_no_crypto",
         security_manager=no_crypto_security,

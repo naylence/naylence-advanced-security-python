@@ -53,15 +53,15 @@ BAMMCVRlc3QgUm9vdDBcMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCuZk
         valid_keys = [{"kty": "RSA", "kid": "test-key", "use": "sig", "n": "test", "e": "AQAB"}]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(valid_keys)
+            await cert_validator.validate_keys(valid_keys)
             child_valid = True
             child_msg = ""
         except Exception as e:
             child_valid = False
             child_msg = str(e)
-        
+
         try:
-            parent_key_infos = await cert_validator.validate_keys(valid_keys)
+            await cert_validator.validate_keys(valid_keys)
             parent_valid = True
             parent_msg = ""
         except Exception as e:
@@ -84,15 +84,15 @@ BAMMCVRlc3QgUm9vdDBcMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCuZk
         ]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(invalid_keys)
+            await cert_validator.validate_keys(invalid_keys)
             child_invalid = True
             child_error = ""
         except Exception as e:
             child_invalid = False
             child_error = str(e)
-        
+
         try:
-            parent_key_infos = await cert_validator.validate_keys(invalid_keys)
+            await cert_validator.validate_keys(invalid_keys)
             parent_invalid = True
             parent_error = ""
         except Exception as e:
@@ -113,7 +113,7 @@ BAMMCVRlc3QgUm9vdDBcMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCuZk
 
         for test_name, keys, expected_valid in guarantees:
             try:
-                key_infos = await cert_validator.validate_keys(keys)
+                await cert_validator.validate_keys(keys)
                 is_valid = True
             except Exception:
                 is_valid = False
@@ -146,7 +146,7 @@ async def test_security_edge_cases(cert_validator):
 
         for keys, case_name in malformed_cases:
             try:
-                key_infos = await cert_validator.validate_keys(keys)
+                await cert_validator.validate_keys(keys)
                 is_valid = True
                 error = ""
             except Exception as e:
@@ -172,7 +172,7 @@ async def test_security_edge_cases(cert_validator):
 
             test_keys = [{"kty": "RSA", "kid": "test", "x5c": ["test-cert"]}]
             try:
-                key_infos = await cert_validator.validate_keys(test_keys)
+                await cert_validator.validate_keys(test_keys)
                 is_valid = True
                 error = ""
             except Exception as e:
@@ -193,7 +193,7 @@ async def test_security_edge_cases(cert_validator):
 
         for keys, case_name in chain_cases:
             try:
-                key_infos = await cert_validator.validate_keys(keys)
+                await cert_validator.validate_keys(keys)
                 is_valid = True
                 error = ""
             except Exception as e:
@@ -245,7 +245,7 @@ BAMMCVRlc3QgUm9vdDBcMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
 
         for attack_key, attack_name in attack_scenarios:
             try:
-                key_infos = await cert_validator.validate_keys([attack_key])
+                await cert_validator.validate_keys([attack_key])
                 is_valid = True
                 error = ""
             except Exception as e:
@@ -279,12 +279,10 @@ async def test_configuration_scenarios(cert_validator):
 
         test_keys = [{"kty": "RSA", "kid": "test", "x5c": ["test-cert"]}]
         try:
-            key_infos = await cert_validator.validate_keys(test_keys)
+            await cert_validator.validate_keys(test_keys)
             is_valid = True
-            error = ""
-        except Exception as e:
+        except Exception:
             is_valid = False
-            error = str(e)
 
         # Should attempt strict validation
         assert not is_valid, "Should perform strict validation when CA certs configured"
@@ -293,12 +291,10 @@ async def test_configuration_scenarios(cert_validator):
         del os.environ["FAME_CA_CERTS"]
 
         try:
-            key_infos = await cert_validator.validate_keys(test_keys)
+            await cert_validator.validate_keys(test_keys)
             is_valid = True
-            error = ""
-        except Exception as e:
+        except Exception:
             is_valid = False
-            error = str(e)
 
         # Should skip validation with warning (returns success when no trust store)
         assert is_valid, "Should skip validation when CA certs not configured"
@@ -314,12 +310,10 @@ second-ca-cert
         os.environ["FAME_CA_CERTS"] = multi_ca
 
         try:
-            key_infos = await cert_validator.validate_keys(test_keys)
+            await cert_validator.validate_keys(test_keys)
             is_valid = True
-            error = ""
-        except Exception as e:
+        except Exception:
             is_valid = False
-            error = str(e)
 
         # Should attempt validation against multiple CAs
         assert not is_valid, "Should validate against multiple CAs"

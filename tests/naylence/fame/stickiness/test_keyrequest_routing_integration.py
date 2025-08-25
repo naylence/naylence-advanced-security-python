@@ -9,9 +9,10 @@ import sys
 from naylence.fame.core import FameEnvelope
 from naylence.fame.core.protocol.frames import DataFrame, KeyRequestFrame
 from naylence.fame.sentinel.load_balancing_strategy import StickyLoadBalancingStrategy
-
 from naylence.fame.stickiness.aft_load_balancer_stickiness_manager import AFTLoadBalancerStickinessManager
-from naylence.fame.stickiness.aft_load_balancer_stickiness_manager_factory import AFTLoadBalancerStickinessManagerConfig
+from naylence.fame.stickiness.aft_load_balancer_stickiness_manager_factory import (
+    AFTLoadBalancerStickinessManagerConfig,
+)
 from naylence.fame.stickiness.stickiness_mode import StickinessMode
 
 

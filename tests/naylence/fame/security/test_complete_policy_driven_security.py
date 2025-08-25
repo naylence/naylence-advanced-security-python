@@ -20,19 +20,19 @@ class TestPolicyDrivenSecurityArchitecture:
         """Test that SecurityManager is the single bundle for appropriate crypto primitives."""
         # Create a security bundle with a policy that requires security components
         from naylence.fame.security.policy.security_policy import (
-            SigningConfig, OutboundSigningRules, EncryptionConfig, OutboundCryptoRules, CryptoLevel
+            CryptoLevel,
+            EncryptionConfig,
+            OutboundCryptoRules,
+            OutboundSigningRules,
+            SigningConfig,
         )
-        
+
         # Create a policy that actually requires security components
         policy_with_requirements = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                outbound=OutboundSigningRules(default_signing=True)
-            ),
-            encryption=EncryptionConfig(
-                outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
-            )
+            signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True)),
+            encryption=EncryptionConfig(outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)),
         )
-        
+
         security = await SecurityManagerFactory.create_security_manager(policy_with_requirements)
 
         # Verify crypto primitives that can be auto-created are bundled
@@ -48,7 +48,7 @@ class TestPolicyDrivenSecurityArchitecture:
 
         print("✓ SecurityManager provides single bundle for appropriate crypto primitives")
         print("✓ Encryption managers are auto-created when policy requires encryption")
-        
+
         # Also test with default policy (should create nothing)
         default_security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
         assert default_security.policy is not None
@@ -56,7 +56,7 @@ class TestPolicyDrivenSecurityArchitecture:
         assert default_security.envelope_verifier is None  # Default policy doesn't require verification
         assert default_security.encryption is None  # Default policy doesn't require encryption
         assert default_security.key_manager is None  # Default policy doesn't require key exchange
-        
+
         print("✓ Default policy correctly creates no security components")
 
     @pytest.mark.asyncio
@@ -68,14 +68,12 @@ class TestPolicyDrivenSecurityArchitecture:
         assert default_security.key_manager is None  # Not created because not required
 
         # Test with policy that requires key exchange (signing requires key exchange)
-        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
-        
+        from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
+
         signing_policy = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                outbound=OutboundSigningRules(default_signing=True)
-            )
+            signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
         )
-        
+
         security_with_keys = await SecurityManagerFactory.create_security_manager(signing_policy)
         assert security_with_keys.policy.requirements().require_key_exchange is True
         assert security_with_keys.key_manager is not None
@@ -104,14 +102,14 @@ class TestPolicyDrivenSecurityArchitecture:
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
-        
+
         # Create envelope tracker
         delivery_tracker_factory = DefaultDeliveryTrackerFactory()
         delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-        
+
         node = FameNode(
-            security_manager=security, 
-            storage_provider=storage_provider, 
+            security_manager=security,
+            storage_provider=storage_provider,
             node_meta_store=node_meta_store,
             delivery_tracker=delivery_tracker,
         )
@@ -133,14 +131,12 @@ class TestPolicyDrivenSecurityArchitecture:
     async def test_fame_node_key_manager_priority(self):
         """Test FameNode key manager behavior with SecurityManager."""
         # Test 1: Create policy that requires key manager
-        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
-        
+        from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
+
         policy_with_km = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                outbound=OutboundSigningRules(default_signing=True)
-            )
+            signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
         )
-        
+
         security_with_km = await SecurityManagerFactory.create_security_manager(policy_with_km)
 
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
@@ -148,11 +144,11 @@ class TestPolicyDrivenSecurityArchitecture:
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
-        
+
         # Create envelope tracker
         delivery_tracker_factory = DefaultDeliveryTrackerFactory()
         delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-        
+
         node1 = FameNode(
             security_manager=security_with_km,
             storage_provider=storage_provider,
@@ -166,11 +162,11 @@ class TestPolicyDrivenSecurityArchitecture:
         security_without_km = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
         storage_provider2 = InMemoryStorageProvider()
         node_meta_store2 = InMemoryKVStore[NodeMeta](NodeMeta)
-        
+
         # Create envelope tracker for second node
         delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
         delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
-        
+
         node2 = FameNode(
             security_manager=security_without_km,
             storage_provider=storage_provider2,
@@ -185,22 +181,22 @@ class TestPolicyDrivenSecurityArchitecture:
     async def test_sentinel_delegates_to_security_architecture(self):
         """Test that Sentinel delegates all security setup to the architecture."""
         # Create Sentinel with explicit security that requires key manager
-        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
-        
+        from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
+
         policy_with_km = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                outbound=OutboundSigningRules(default_signing=True)
-            )
+            signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
         )
-        
+
         security = await SecurityManagerFactory.create_security_manager(policy_with_km)
         storage_provider = InMemoryStorageProvider()
-        
+
         # Create envelope tracker for Sentinel
         delivery_tracker_factory = DefaultDeliveryTrackerFactory()
         delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-        
-        sentinel = Sentinel(security_manager=security, storage_provider=storage_provider, delivery_tracker=delivery_tracker)
+
+        sentinel = Sentinel(
+            security_manager=security, storage_provider=storage_provider, delivery_tracker=delivery_tracker
+        )
 
         # Verify Sentinel uses security bundle through the security manager
         assert sentinel._security_manager.policy is security.policy
@@ -217,11 +213,11 @@ class TestPolicyDrivenSecurityArchitecture:
     async def test_sentinel_routing_context_update(self):
         """Test that Sentinel updates key manager with routing context."""
         storage_provider = InMemoryStorageProvider()
-        
+
         # Create envelope tracker for Sentinel
         delivery_tracker_factory = DefaultDeliveryTrackerFactory()
         delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-        
+
         sentinel = Sentinel(storage_provider=storage_provider, delivery_tracker=delivery_tracker)
 
         # Verify key manager has routing capabilities
@@ -239,39 +235,41 @@ class TestPolicyDrivenSecurityArchitecture:
     async def test_complete_architecture_integration(self):
         """Test the complete architecture integration."""
         # Create a complete setup with policy that requires key managers
-        from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
-        
+        from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
+
         policy_with_km = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                outbound=OutboundSigningRules(default_signing=True)
-            )
+            signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
         )
-        
+
         security = await SecurityManagerFactory.create_security_manager(policy_with_km)
 
         # Create regular node
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
-        
+
         # Create envelope tracker
         delivery_tracker_factory = DefaultDeliveryTrackerFactory()
         delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-        
+
         node = FameNode(
-            security_manager=security, 
-            storage_provider=storage_provider, 
+            security_manager=security,
+            storage_provider=storage_provider,
             node_meta_store=node_meta_store,
             delivery_tracker=delivery_tracker,
         )
 
         # Create routing node (Sentinel)
         storage_provider2 = InMemoryStorageProvider()
-        
+
         # Create envelope tracker for Sentinel
         delivery_tracker_factory2 = DefaultDeliveryTrackerFactory()
         delivery_tracker2 = await delivery_tracker_factory2.create(storage_provider=storage_provider2)
-        
-        sentinel = Sentinel(security_manager=security, storage_provider=storage_provider2, delivery_tracker=delivery_tracker2)
+
+        sentinel = Sentinel(
+            security_manager=security,
+            storage_provider=storage_provider2,
+            delivery_tracker=delivery_tracker2,
+        )
 
         # Verify both use the same security policy
         assert node._security_manager.policy is security.policy
@@ -286,4 +284,3 @@ class TestPolicyDrivenSecurityArchitecture:
         assert requirements.require_key_exchange is True
 
         print("✓ Complete architecture integration works")
-

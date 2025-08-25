@@ -11,7 +11,7 @@ from naylence.fame.stickiness.aft_load_balancer_stickiness_manager import (
     AFTLoadBalancerStickinessManager,
     AFTLoadBalancerStickinessManagerConfig,
 )
-from naylence.fame.stickiness.aft_verifier import create_aft_verifier, SidOnlyAFTVerifier
+from naylence.fame.stickiness.aft_verifier import SidOnlyAFTVerifier
 from naylence.fame.stickiness.stickiness_mode import StickinessMode
 
 

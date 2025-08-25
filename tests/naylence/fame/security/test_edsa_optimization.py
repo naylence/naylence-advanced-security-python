@@ -99,7 +99,7 @@ def test_eddsa_optimization(create_test_cert_and_key):
                 print(f"Certificates equivalent: {cert1.serial_number == cert2.serial_number}")
             elif not isinstance(result1, tuple) and not isinstance(result2, tuple):
                 try:
-                    print(f"Public keys equivalent: {result1.public_numbers() == result2.public_numbers()}") # type: ignore
+                    print(f"Public keys equivalent: {result1.public_numbers() == result2.public_numbers()}")  # type: ignore
                 except AttributeError:
                     print(f"Public keys equivalent: {result1 == result2}")
 

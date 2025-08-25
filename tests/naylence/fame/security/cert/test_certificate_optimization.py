@@ -49,7 +49,7 @@ def test_optimization_performance(create_test_cert_and_key):
                     signing_material=SigningMaterial.X509_CHAIN,
                     require_cert_sid_match=False,
                     require_cert_logical_match=False,
-                    ),
+                ),
             ),
             (
                 "SID matching only",

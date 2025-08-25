@@ -1,41 +1,58 @@
+Here’s a draft README description for your **Naylence Advanced Security** package. I kept it focused on explaining what the package does, how it fits into Naylence, and what problems it solves—without going into installation or boilerplate.
+
+---
+
 # Naylence Advanced Security
 
-A small collection of security components for the Naylence ecosystem. It provides pluggable encryption managers and certificate validation utilities that integrate with the Naylence FAME runtime via Python entry points.
+**Naylence Advanced Security** is a high-assurance extension for the [Naylence Agentic Fabric](https://github.com/naylence) that delivers advanced cryptographic and policy-driven protections for multi-agent systems. It is designed for environments where agents, services, and organizations must interact across trust domains while preserving **confidentiality, integrity, durability, and policy compliance**.
 
-## Features
+At its core, Naylence already provides a zero-trust, message-oriented backbone for federated agents. This package extends that foundation with **overlay security features** and **pluggable security managers** that make the system resilient in complex, federated, and regulated deployments.
 
-- X25519 sealed-encryption manager
-- Channel encryption manager
-- Attachment certificate validator with CA service and local cache
-- Plugin-based integration with the Naylence FAME runtime (via entry points)
+---
 
-## Requirements
+## Key Features
 
-- Python 3.12+
-- Poetry for dependency management
+* **Overlay Encryption & Sealed Channels**
+  Adds an additional cryptographic layer on top of channel security. Messages remain encrypted and authenticated across multi-hop routes, even if intermediate sentinels or transport layers are compromised.
 
-## Install (local development)
+* **Envelope Signing & Identity Assurance**
+  Supports both **key-based signing** and **X.509/SPIFFE-style identities**, ensuring every envelope is verifiable to its origin. This enables tamper-resistant audit trails and fine-grained access control.
 
-Use Poetry to install dependencies and manage the virtual environment. The project declares a path dependency on `naylence-fame-runtime` at `../naylence-fame-runtime`. For local development, place that repository next to this one or update the dependency path in `pyproject.toml` to match your setup.
+* **Security Profiles**
+  Predefined profiles (`open`, `perimeter`, `standard`, `strict-overlay`) encapsulate best-practice combinations of authentication, encryption, and authorization. Developers can choose the right trade-off between ease of use and maximum assurance.
 
-## Development
+* **Pluggable Security Managers**
+  The package exposes extension points for `SecurityManagerFactory` and `AuthorizerFactory`. This allows custom implementations of:
 
-Use Black and Ruff for formatting and linting, Pyright for type checking, and Pytest for tests with coverage.
+  * Shared-secret or OAuth2 authorization
+  * Policy-driven security contexts
+  * Custom identity backends (PKI, SPIFFE, or bespoke systems)
 
-## Project layout
+* **Durable Cross-Domain Trust**
+  Enables secure federation across organizations or cloud providers, with guarantees that **policies, not perimeter assumptions**, determine who can talk to whom.
 
-- `src/naylence/fame/security/encryption/sealed/` – X25519 encryption manager
-- `src/naylence/fame/security/encryption/channel/` – Channel encryption manager
-- `src/naylence/fame/security/cert/` – Certificate utilities (CA service, cache, validators)
+---
 
-## Runtime integration
+## Why Advanced Security?
 
-This package exposes entry points consumed by the Naylence FAME runtime to discover and load security components (see `pyproject.toml`).
+Agent orchestration introduces unique risks:
 
-## Contributing
+* Messages often cross multiple hops and administrative domains.
+* Long-running jobs and sticky sessions can span hours or days.
+* Agents may be mobile, ephemeral, or deployed in untrusted environments.
 
-- Open an issue or pull request
-- Ensure formatting, linting, type checking, and tests pass locally
+Naylence Advanced Security addresses these challenges by ensuring that **security travels with the message**—not with the network perimeter. This shifts protection closer to the application and agent layer, enabling **zero-trust by design**.
+
+---
+
+## Use Cases
+
+* **Federated AI Agent Systems** – Secure orchestration across multiple organizations or departments.
+* **Cross-Cloud Workflows** – Durable, encrypted communication across cloud providers and trust boundaries.
+* **Regulated Environments** – Fine-grained, auditable security controls for healthcare, finance, or defense.
+* **Multi-tenant Platforms** – Strong tenant isolation and policy-based routing in agent platforms.
+
+---
 
 ## License
 

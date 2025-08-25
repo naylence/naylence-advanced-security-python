@@ -29,8 +29,8 @@ async def test_node_with_key_requests():
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
 
     encryption_manager = CompositeEncryptionManager(
-        secure_channel_manager=mock_secure_channel_manager, # type: ignore
-        key_provider=get_key_provider()
+        secure_channel_manager=mock_secure_channel_manager,  # type: ignore
+        key_provider=get_key_provider(),
     )
 
     # Create a test node
@@ -41,11 +41,11 @@ async def test_node_with_key_requests():
     from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
-    
+
     # Create envelope tracker
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()
     delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-    
+
     node = FameNode(
         system_id="test-node",
         security_manager=node_security,
@@ -128,7 +128,7 @@ async def test_node_with_key_requests():
         new_frame = DataFrame(payload={"test": "immediate"}, codec="json")
         new_envelope = FameEnvelope(frame=new_frame)
 
-        result = await node._security_manager.encryption.encrypt_envelope( # type: ignore
+        result = await node._security_manager.encryption.encrypt_envelope(  # type: ignore
             new_envelope, opts={"recip_kid": test_kid}
         )  # type: ignore
 

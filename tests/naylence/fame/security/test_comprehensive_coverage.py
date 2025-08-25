@@ -367,12 +367,14 @@ class TestEncryptionHandling:
         """Test envelope decryption with security handler."""
         # Create policy that requires verification (which will create security handler)
         from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
-        from naylence.fame.security.policy.security_policy import SigningConfig, InboundSigningRules, SignaturePolicy
+        from naylence.fame.security.policy.security_policy import (
+            InboundSigningRules,
+            SignaturePolicy,
+            SigningConfig,
+        )
 
         policy_with_verification = DefaultSecurityPolicy(
-            signing=SigningConfig(
-                inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED)
-            )
+            signing=SigningConfig(inbound=InboundSigningRules(signature_policy=SignaturePolicy.REQUIRED))
         )
 
         # Mock security handler
@@ -390,7 +392,7 @@ class TestEncryptionHandling:
         # Only set envelope security handler if we have key management capability
         # This simulates the condition where envelope security handler is only created
         # when key management handler exists
-        if hasattr(manager, '_key_management_handler') and manager._key_management_handler:
+        if hasattr(manager, "_key_management_handler") and manager._key_management_handler:
             manager._envelope_security_handler = mock_security_handler
         else:
             # If no key management handler, the envelope security handler won't be created
@@ -405,12 +407,12 @@ class TestEncryptionHandling:
         address = FameAddress("encrypted@/endpoint")
         context = FameDeliveryContext(origin_type=DeliveryOriginType.UPSTREAM, from_system_id="remote-node")
 
-        result = await manager.on_deliver_local(comprehensive_mock_node, address, envelope, context)
+        await manager.on_deliver_local(comprehensive_mock_node, address, envelope, context)
 
         # Verify that the security handler was called and the envelope was processed
         mock_security_handler.should_decrypt_envelope.assert_called_once()
         mock_security_handler.decrypt_envelope.assert_called_once()
-        
+
         # The result of on_deliver_local is whether delivery should continue (envelope was processed)
         # Since we have encryption headers, the security handler should have processed it
         assert envelope.frame.payload == {"decrypted": "data"}

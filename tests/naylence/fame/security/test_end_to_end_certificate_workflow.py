@@ -20,7 +20,7 @@ async def test_end_to_end_certificate_workflow():
         OutboundSigningRules,
         SignaturePolicy,
         SigningConfig,
-        SigningMaterial
+        SigningMaterial,
     )
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
     from naylence.fame.util.util import secure_digest
@@ -28,7 +28,6 @@ async def test_end_to_end_certificate_workflow():
     print("=== Testing End-to-End Certificate Workflow ===\n")
 
     # Set up policy with certificate features enabled
-    from naylence.fame.security.policy.security_policy import SigningMaterial
 
     cert_policy = DefaultSecurityPolicy(
         signing=SigningConfig(

@@ -90,13 +90,23 @@ class TestFlexibleCryptoPolicy:
 
         # Test default rules - Default policy is minimal and only allows PLAINTEXT
         assert policy.is_inbound_crypto_level_allowed(CryptoLevel.PLAINTEXT, envelope) is True
-        assert policy.is_inbound_crypto_level_allowed(CryptoLevel.CHANNEL, envelope) is False  # Not allowed by default
-        assert policy.is_inbound_crypto_level_allowed(CryptoLevel.SEALED, envelope) is False   # Not allowed by default
+        assert (
+            policy.is_inbound_crypto_level_allowed(CryptoLevel.CHANNEL, envelope) is False
+        )  # Not allowed by default
+        assert (
+            policy.is_inbound_crypto_level_allowed(CryptoLevel.SEALED, envelope) is False
+        )  # Not allowed by default
 
         # Test violation actions - ALLOW for allowed level, NACK for violations
-        assert policy.get_inbound_violation_action(CryptoLevel.PLAINTEXT, envelope) == SecurityAction.ALLOW  # Allowed
-        assert policy.get_inbound_violation_action(CryptoLevel.CHANNEL, envelope) == SecurityAction.NACK   # Violation
-        assert policy.get_inbound_violation_action(CryptoLevel.SEALED, envelope) == SecurityAction.NACK    # Violation
+        assert (
+            policy.get_inbound_violation_action(CryptoLevel.PLAINTEXT, envelope) == SecurityAction.ALLOW
+        )  # Allowed
+        assert (
+            policy.get_inbound_violation_action(CryptoLevel.CHANNEL, envelope) == SecurityAction.NACK
+        )  # Violation
+        assert (
+            policy.get_inbound_violation_action(CryptoLevel.SEALED, envelope) == SecurityAction.NACK
+        )  # Violation
 
     @pytest.mark.asyncio
     async def test_default_policy_response_crypto_rules(self):

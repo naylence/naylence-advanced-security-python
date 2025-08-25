@@ -15,7 +15,6 @@ from naylence.fame.stickiness.aft_load_balancer_stickiness_manager import (
     AFTLoadBalancerStickinessManagerConfig,
 )
 from naylence.fame.stickiness.aft_verifier import AFTVerificationResult, create_aft_verifier
-from naylence.fame.stickiness.stickiness_mode import StickinessMode
 
 
 def create_stickiness_manager(config: AFTLoadBalancerStickinessManagerConfig, key_provider, verifier=None):

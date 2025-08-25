@@ -93,11 +93,11 @@ def test_key_consistency():
 
     assert len(signing_keys) == 1, f"Expected 1 signing key, got {len(signing_keys)}"
     assert len(encryption_keys) == 1, f"Expected 1 encryption key, got {len(encryption_keys)}"
-    
+
     # Certificate provisioning may not work in test environment
     # The important part is that both components return identical key structures
     print(f"  Certificate keys: {len(cert_keys)} (certificates may not be available in test environment)")
-    
+
     print("✓ Key consistency test passed!")
 
     # Verify certificate is on signing key if certificates are available

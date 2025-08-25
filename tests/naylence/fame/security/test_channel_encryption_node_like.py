@@ -2,7 +2,6 @@ import asyncio
 
 import pytest
 
-from naylence.fame.security.default_security_manager_factory import DefaultSecurityManagerFactory
 from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
 
 

@@ -187,16 +187,18 @@ async def test_real_world_integration():
     # Default policy correctly creates no encryption manager (no encryption required)
     encryption_manager = node_security.encryption
     print(f"   Default policy encryption manager: {encryption_manager}")
-    
+
     # Create a policy that actually requires encryption
-    from naylence.fame.security.policy.security_policy import EncryptionConfig, OutboundCryptoRules, CryptoLevel
-    
-    encryption_policy = DefaultSecurityPolicy(
-        encryption=EncryptionConfig(
-            outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
-        )
+    from naylence.fame.security.policy.security_policy import (
+        CryptoLevel,
+        EncryptionConfig,
+        OutboundCryptoRules,
     )
-    
+
+    encryption_policy = DefaultSecurityPolicy(
+        encryption=EncryptionConfig(outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL))
+    )
+
     encryption_security = await SecurityManagerFactory.create_security_manager(encryption_policy)
     encryption_manager = encryption_security.encryption
     assert encryption_manager is not None

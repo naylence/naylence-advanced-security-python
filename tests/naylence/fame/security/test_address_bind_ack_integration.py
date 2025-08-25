@@ -43,11 +43,11 @@ async def test_address_bind_ack_signature_mirroring_integration():
                     },
                 },
             },
-        }, # type: ignore
+        },  # type: ignore
     )
 
     # Create the sentinel using the factory
-    factory = SentinelFactory() # type: ignore
+    factory = SentinelFactory()  # type: ignore
 
     async with await factory.create(sentinel_config) as sentinel:
         print(f"📡 Created sentinel with ID: {sentinel.id}")
@@ -114,8 +114,8 @@ async def test_address_bind_ack_signature_mirroring_integration():
         )
         context.meta = {"message-type": "response"}  # Mark as response for signature mirroring
 
-        print(f"📝 Original request signed: {context.security.inbound_was_signed}") # type: ignore
-        print(f"📝 Original crypto level: {context.security.inbound_crypto_level}") # type: ignore
+        print(f"📝 Original request signed: {context.security.inbound_was_signed}")  # type: ignore
+        print(f"📝 Original crypto level: {context.security.inbound_crypto_level}")  # type: ignore
 
         # Execute the handler
         await handler.accept_address_bind(signed_envelope, context)
@@ -188,11 +188,11 @@ async def test_address_bind_ack_no_signature_mirroring_for_unsigned_request():
                     },
                 },
             },
-        }, # type: ignore
+        },  # type: ignore
     )
 
     # Create the sentinel using the factory
-    factory = SentinelFactory() # type: ignore
+    factory = SentinelFactory()  # type: ignore
 
     async with await factory.create(sentinel_config) as sentinel:
         print(f"📡 Created sentinel with ID: {sentinel.id}")
@@ -251,7 +251,7 @@ async def test_address_bind_ack_no_signature_mirroring_for_unsigned_request():
             ),
         )
 
-        print(f"📝 Original request signed: {context.security.inbound_was_signed}") # type: ignore
+        print(f"📝 Original request signed: {context.security.inbound_was_signed}")  # type: ignore
 
         # Execute the handler
         await handler.accept_address_bind(unsigned_envelope, context)

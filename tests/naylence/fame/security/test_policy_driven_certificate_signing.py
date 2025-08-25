@@ -12,7 +12,7 @@ async def test_policy_driven_certificate_signing():
         OutboundSigningRules,
         SignaturePolicy,
         SigningConfig,
-        SigningMaterial
+        SigningMaterial,
     )
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
     from naylence.fame.security.signing.eddsa_envelope_signer import EdDSAEnvelopeSigner
@@ -42,7 +42,7 @@ async def test_policy_driven_certificate_signing():
         verifier_config = default_security.envelope_verifier._signing_config
         print(f"   ✓ Verifier created: {type(default_security.envelope_verifier).__name__}")
         print(f"   ✓ Signing material: {verifier_config.signing_material}")
-        assert verifier_config.signing_material == SigningMaterial.RAW_KEY, ( # type: ignore
+        assert verifier_config.signing_material == SigningMaterial.RAW_KEY, (  # type: ignore
             "Default policy should use RAW_KEY"
         )
 
@@ -54,7 +54,7 @@ async def test_policy_driven_certificate_signing():
         signing=SigningConfig(
             inbound=InboundSigningRules(signature_policy=SignaturePolicy.OPTIONAL),
             outbound=OutboundSigningRules(default_signing=True),
-            signing_material=SigningMaterial.X509_CHAIN, # type: ignore
+            signing_material=SigningMaterial.X509_CHAIN,  # type: ignore
             validate_cert_name_constraints=True,
             require_cert_sid_match=True,
             require_cert_logical_match=False,
@@ -73,7 +73,7 @@ async def test_policy_driven_certificate_signing():
         print(f"   ✓ Require SID match: {signer_config.require_cert_sid_match}")
         print("   ✓ Trust validation uses FAME_CA_CERTS environment variable")
 
-        assert signer_config.signing_material == SigningMaterial.X509_CHAIN, ( # type: ignore
+        assert signer_config.signing_material == SigningMaterial.X509_CHAIN, (  # type: ignore
             "Certificate policy should use X509_CHAIN"
         )
         assert signer_config.validate_cert_name_constraints, "Should validate name constraints"
@@ -87,7 +87,7 @@ async def test_policy_driven_certificate_signing():
         print(f"   ✓ Verifier created: {type(cert_security.envelope_verifier).__name__}")
         print(f"   ✓ Signing material: {verifier_config.signing_material}")
 
-        assert verifier_config.signing_material == SigningMaterial.X509_CHAIN, ( # type: ignore
+        assert verifier_config.signing_material == SigningMaterial.X509_CHAIN, (  # type: ignore
             "Certificate policy should use X509_CHAIN"
         )
         assert verifier_config.validate_cert_name_constraints, "Should validate name constraints"
@@ -110,7 +110,8 @@ async def test_policy_driven_certificate_signing():
 
     # Test with certificate-enabled signer
     cert_signer = EdDSAEnvelopeSigner(
-        crypto_provider, SigningConfig(signing_material=SigningMaterial.X509_CHAIN) # type: ignore
+        crypto_provider,
+        SigningConfig(signing_material=SigningMaterial.X509_CHAIN),  # type: ignore
     )
     cert_kid = cert_signer._get_effective_key_id()
     print(f"   ✓ Certificate signer key ID: {cert_kid}")

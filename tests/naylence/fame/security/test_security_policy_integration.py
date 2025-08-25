@@ -118,11 +118,11 @@ async def test_security_policy_integration():
 
     storage_provider = InMemoryStorageProvider()
     node_meta_store = InMemoryKVStore(NodeMeta)
-    
+
     # Create envelope tracker
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()
     delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-    
+
     async with FameNode(
         system_id="test_node",
         security_manager=node_security,
@@ -212,11 +212,11 @@ async def test_existing_security_policy_with_context():
 
     storage_provider = InMemoryStorageProvider()
     node_meta_store = InMemoryKVStore(NodeMeta)
-    
+
     # Create envelope tracker
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()
     delivery_tracker = await delivery_tracker_factory.create(storage_provider=storage_provider)
-    
+
     async with FameNode(
         system_id="test_node",
         security_manager=node_security,

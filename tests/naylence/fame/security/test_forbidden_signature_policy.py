@@ -1,5 +1,3 @@
-import asyncio
-
 from naylence.fame.security.policy import DefaultSecurityPolicy
 from naylence.fame.security.policy.security_policy import (
     InboundSigningRules,

@@ -783,7 +783,7 @@ class ChannelEncryptionManager(EncryptionManager):
                 to=FameAddress(str(destination)),
                 frame=open_frame,
                 reply_to=reply_to_address,
-                corr_id=generate_id()
+                corr_id=generate_id(),
             )
 
             # Deliver directly using async

@@ -58,7 +58,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDfake_cert_data
 
         # Test child certificate validation
         try:
-            key_infos = await cert_validator.validate_keys([untrusted_jwk])
+            await cert_validator.validate_keys([untrusted_jwk])
             is_valid = True
             error = ""
         except Exception as e:
@@ -69,7 +69,7 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDfake_cert_data
 
         # Test parent certificate validation
         try:
-            key_infos = await cert_validator.validate_keys([untrusted_jwk])
+            await cert_validator.validate_keys([untrusted_jwk])
             is_valid = True
             error = ""
         except Exception as e:
@@ -111,22 +111,18 @@ async def test_attachment_without_trust_store(cert_validator):
 
         # Test child attachment without trust store
         try:
-            key_infos = await cert_validator.validate_keys([jwk_with_cert])
+            await cert_validator.validate_keys([jwk_with_cert])
             is_valid = True
-            error = ""
-        except Exception as e:
+        except Exception:
             is_valid = False
-            error = str(e)
         assert is_valid, "Should allow attachment when no trust store configured"
 
         # Test parent attachment without trust store
         try:
-            key_infos = await cert_validator.validate_keys([jwk_with_cert])
+            await cert_validator.validate_keys([jwk_with_cert])
             is_valid = True
-            error = ""
-        except Exception as e:
+        except Exception:
             is_valid = False
-            error = str(e)
         assert is_valid, "Should allow attachment when no trust store configured"
 
     finally:
@@ -147,7 +143,7 @@ async def test_attachment_validation_edge_cases(cert_validator):
     try:
         # Test 1: Empty key list
         try:
-            key_infos = await cert_validator.validate_keys([])
+            await cert_validator.validate_keys([])
             is_valid = True
             error = ""
         except Exception as e:
@@ -157,7 +153,7 @@ async def test_attachment_validation_edge_cases(cert_validator):
 
         # Test 2: None key list
         try:
-            key_infos = await cert_validator.validate_keys(None)
+            await cert_validator.validate_keys(None)
             is_valid = True
             error = ""
         except Exception as e:
@@ -171,7 +167,7 @@ async def test_attachment_validation_edge_cases(cert_validator):
             {"kty": "RSA", "kid": "key2", "use": "enc", "n": "mod", "e": "AQAB"},
         ]
         try:
-            key_infos = await cert_validator.validate_keys(keys_without_cert)
+            await cert_validator.validate_keys(keys_without_cert)
             is_valid = True
             error = ""
         except Exception as e:
@@ -194,7 +190,7 @@ async def test_attachment_validation_edge_cases(cert_validator):
             },  # Invalid cert
         ]
         try:
-            key_infos = await cert_validator.validate_keys(mixed_keys)
+            await cert_validator.validate_keys(mixed_keys)
             is_valid = True
             error = ""
         except Exception as e:
@@ -229,13 +225,13 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
         valid_keys = [{"kty": "RSA", "kid": "test-key", "use": "sig", "n": "test", "e": "AQAB"}]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(valid_keys)
+            await cert_validator.validate_keys(valid_keys)
             child_valid = True
         except Exception:
             child_valid = False
-        
+
         try:
-            parent_key_infos = await cert_validator.validate_keys(valid_keys)
+            await cert_validator.validate_keys(valid_keys)
             parent_valid = True
         except Exception:
             parent_valid = False
@@ -256,15 +252,15 @@ IE5vZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7test
         ]
 
         try:
-            child_key_infos = await cert_validator.validate_keys(invalid_keys)
+            await cert_validator.validate_keys(invalid_keys)
             child_invalid = True
             child_error = ""
         except Exception as e:
             child_invalid = False
             child_error = str(e)
-        
+
         try:
-            parent_key_infos = await cert_validator.validate_keys(invalid_keys)
+            await cert_validator.validate_keys(invalid_keys)
             parent_invalid = True
             parent_error = ""
         except Exception as e:

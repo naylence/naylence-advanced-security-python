@@ -167,14 +167,12 @@ async def test_node_security_key_manager_consistency():
     print("Testing SecurityManager creates consistent KeyManager...")
 
     from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
-    from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+    from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
 
     # Create SecurityManager using a policy that requires key management (signing requires keys)
     policy_with_key_mgmt = DefaultSecurityPolicy(
-        signing=SigningConfig(
-            outbound=OutboundSigningRules(default_signing=True)
-        )
+        signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
     )
     node_security = await SecurityManagerFactory.create_security_manager(policy_with_key_mgmt)
 

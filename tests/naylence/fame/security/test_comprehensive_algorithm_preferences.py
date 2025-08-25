@@ -147,28 +147,28 @@ async def test_complete_algorithm_preference_system():
     requirements = policy.requirements()
     print(f"   Default policy signing required: {requirements.signing_required}")
     print(f"   Default policy encryption required: {requirements.encryption_required}")
-    
+
     node_security = await SecurityManagerFactory.create_security_manager(policy)
 
     # The default policy correctly creates no components
     assert node_security.policy is not None
-    
+
     # Create a policy that actually requires components
     from naylence.fame.security.policy.security_policy import (
-        SigningConfig, OutboundSigningRules, EncryptionConfig, OutboundCryptoRules, CryptoLevel
+        CryptoLevel,
+        EncryptionConfig,
+        OutboundCryptoRules,
+        OutboundSigningRules,
+        SigningConfig,
     )
-    
+
     policy_with_requirements = DefaultSecurityPolicy(
-        signing=SigningConfig(
-            outbound=OutboundSigningRules(default_signing=True)
-        ),
-        encryption=EncryptionConfig(
-            outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)
-        )
+        signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True)),
+        encryption=EncryptionConfig(outbound=OutboundCryptoRules(default_level=CryptoLevel.CHANNEL)),
     )
-    
+
     node_security_with_reqs = await SecurityManagerFactory.create_security_manager(policy_with_requirements)
-    
+
     # Now these should be created
     assert node_security_with_reqs.envelope_signer is not None
     assert node_security_with_reqs.envelope_verifier is not None

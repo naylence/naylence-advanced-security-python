@@ -9,8 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.security.keys.in_memory_key_store import InMemoryKeyStore
+from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 
 
 def create_test_certificate(valid_until: datetime.datetime) -> bytes:
@@ -148,9 +148,7 @@ async def test_certificate_purging_expired_certificates():
     print("Testing certificate purging...")
 
     key_store = InMemoryKeyStore()
-    key_manager = X5CKeyManager(
-        key_store=key_store, cert_purge_interval=0.1
-    )  # Short interval for testing
+    key_manager = X5CKeyManager(key_store=key_store, cert_purge_interval=0.1)  # Short interval for testing
 
     # Initialize with mock node
     mock_node = MockNode()

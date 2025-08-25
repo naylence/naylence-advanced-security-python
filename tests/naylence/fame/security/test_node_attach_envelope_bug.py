@@ -109,14 +109,12 @@ async def test_key_manager_creation_patterns():
 
     # Pattern 3: Via SecurityManager (production pattern)
     from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
-    from naylence.fame.security.policy.security_policy import SigningConfig, OutboundSigningRules
+    from naylence.fame.security.policy.security_policy import OutboundSigningRules, SigningConfig
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
 
     # Create a policy that requires key management
     policy_with_key_mgmt = DefaultSecurityPolicy(
-        signing=SigningConfig(
-            outbound=OutboundSigningRules(default_signing=True)
-        )
+        signing=SigningConfig(outbound=OutboundSigningRules(default_signing=True))
     )
     node_security = await SecurityManagerFactory.create_security_manager(policy_with_key_mgmt)
     key_manager3 = node_security.key_manager

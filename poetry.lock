@@ -983,48 +983,72 @@ files = [
 ]
 
 [[package]]
-name = "naylence-fame-core"
-version = "0.1.9"
-description = "Naylence Fame Core"
+name = "naylence-core"
+version = "0.1.13"
+description = "Naylence Core"
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
-files = []
-develop = true
+files = [
+    {file = "naylence_core-0.1.13-py3-none-any.whl", hash = "sha256:aec99fb7332a52a41be1ef90458bcda3ead4e07bc646e6052a856f4aec07df09"},
+    {file = "naylence_core-0.1.13.tar.gz", hash = "sha256:aa281f4f6e2588287f39508db2a97382de30f312ffadf596d93e65695c665ad2"},
+]
+
+[package.dependencies]
+naylence-factory = ">=0.1.1,<0.2.0"
+pydantic = ">=2.11.4,<3.0.0"
+
+[package.source]
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "testpypi"
+
+[[package]]
+name = "naylence-factory"
+version = "0.1.1"
+description = "Naylence resource factory and extension management framework"
+optional = false
+python-versions = ">=3.12"
+groups = ["main"]
+files = [
+    {file = "naylence_factory-0.1.1-py3-none-any.whl", hash = "sha256:f7225004fd9c817cd37499f4a1afd9beaaf2cf23cc1e717078f87735fbcb05e9"},
+    {file = "naylence_factory-0.1.1.tar.gz", hash = "sha256:32728bd1ce04e8a0ffdbfcb03463ef9aeaf650f94225c0cfcaabb242f3e0ade9"},
+]
 
 [package.dependencies]
 pydantic = ">=2.11.4,<3.0.0"
 
 [package.source]
-type = "directory"
-url = "../naylence-fame-core"
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "testpypi"
 
 [[package]]
-name = "naylence-fame-runtime"
-version = "0.1.57"
-description = "Naylence Fame Runtime"
+name = "naylence-runtime"
+version = "0.1.61"
+description = "Naylence Runtime"
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
-files = []
-develop = true
+files = [
+    {file = "naylence_runtime-0.1.61-py3-none-any.whl", hash = "sha256:45eda649a314d294abdca9ca6c38a8889cd57690a6567ed382a3d1b4feb3fd89"},
+    {file = "naylence_runtime-0.1.61.tar.gz", hash = "sha256:db005cd9f8121af60c3f9cdbdefa0ba1f74c1c47bd5e8409a885dda7cd83ca39"},
+]
 
 [package.dependencies]
-aiohttp = "^3.11.18"
-httpx = "^0.28.1"
-naylence-fame-core = {path = "../naylence-fame-core", develop = true}
-pyyaml = "^6.0.2"
-structlog = "^25.3.0"
-websockets = "^15.0.1"
-
-[package.extras]
-crypto = ["cryptography (>=45.0.2,<46.0.0)", "pyjwt (>=2.10.1,<3.0.0)"]
-jwt = ["pyjwt (>=2.10.1,<3.0.0)"]
-x25519 = ["cryptography (>=45.0.2,<46.0.0)"]
+aiohttp = ">=3.11.18,<4.0.0"
+cryptography = ">=45.0.6,<46.0.0"
+httpx = ">=0.28.1,<0.29.0"
+naylence-core = ">=0.1.13,<0.2.0"
+pyjwt = ">=2.10.1,<3.0.0"
+pyyaml = ">=6.0.2,<7.0.0"
+structlog = ">=25.3.0,<26.0.0"
+websockets = ">=15.0.1,<16.0.0"
 
 [package.source]
-type = "directory"
-url = "../naylence-fame-runtime"
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "testpypi"
 
 [[package]]
 name = "nodeenv"
@@ -1897,14 +1921,14 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.14.1"
+version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "api", "dev", "mcp"]
 files = [
-    {file = "typing_extensions-4.14.1-py3-none-any.whl", hash = "sha256:d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76"},
-    {file = "typing_extensions-4.14.1.tar.gz", hash = "sha256:38b39f4aeeab64884ce9f74c94263ef78f3c22467c8724005483154c26648d36"},
+    {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
+    {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
 ]
 
 [[package]]
@@ -2143,4 +2167,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "d2867e8c5749ec54a60adbd54d87f0db7183eb7a8b522f552f9e111ec85a45c8"
+content-hash = "a7cd310dc6f19d1e2e2dc078a535f835fd914ca96a8f62e46a4627efbf49770d"

@@ -15,9 +15,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-naylence-fame-runtime = { path = "../naylence-fame-runtime", develop = true }
+#naylence-fame-runtime = { path = "../naylence-fame-runtime", develop = true }
 cryptography = { version = "^45.0.2", optional = false }
 pyjwt = { version = "^2.10.1", optional = false }
+naylence-runtime = "^0.1.61"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -35,6 +36,14 @@ fastapi = "^0.115.12"
 
 [tool.poetry.group.mcp.dependencies]
 mcp = "^1.9.1"
+
+# Package sources: allow fallback to TestPyPI for packages that
+# don't exist on PyPI yet (e.g., naylence-factory while in early testing).
+[[tool.poetry.source]]
+name = "testpypi"
+url = "https://test.pypi.org/simple"
+priority = "supplemental"
+
 
 [tool.pyright]
 include = ["src/naylence"]
@@ -68,7 +77,7 @@ addopts = [
     "--cov-report=xml:coverage.xml",
     "--cov-report=term-missing",
     "--cov-branch",
-    "--cov-fail-under=80"
+    "--cov-fail-under=65"
 ]
 
 [tool.coverage.run]

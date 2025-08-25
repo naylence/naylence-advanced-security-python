@@ -18,9 +18,12 @@ async def test_factory_integration():
     # Create a policy directly with the configuration that should require signing
     from naylence.fame.security.policy.default_security_policy import DefaultSecurityPolicy
     from naylence.fame.security.policy.security_policy import (
-        SigningConfig, OutboundSigningRules, InboundSigningRules, SignaturePolicy
+        InboundSigningRules,
+        OutboundSigningRules,
+        SignaturePolicy,
+        SigningConfig,
     )
-    
+
     # Create the same policy that the configuration should have created
     test_policy = DefaultSecurityPolicy(
         signing=SigningConfig(
@@ -43,9 +46,10 @@ async def test_factory_integration():
     # Create the node using the factory but replace the security manager with our test one
     factory = NodeFactory()
     node = await factory.create(config)
-    
+
     # Replace the default security manager with our test policy
     from naylence.fame.security.security_manager_factory import SecurityManagerFactory
+
     test_security = await SecurityManagerFactory.create_security_manager(test_policy)
     node._security_manager = test_security
 
@@ -121,22 +125,24 @@ async def test_factory_integration():
         handler = node._security_manager.envelope_security_handler
         print("\nEnvelope security handler:")
         if handler is not None:
-            print(f"  - Has signer: {handler._envelope_signer is not None}") # type: ignore
-            print(f"  - Has verifier: {handler._envelope_verifier is not None}") # type: ignore
-            print(f"  - Has encryption manager: {handler._encryption_manager is not None}") # type: ignore
-            print(f"  - Has security policy: {handler._security_policy is not None}") # type: ignore
+            print(f"  - Has signer: {handler._envelope_signer is not None}")  # type: ignore
+            print(f"  - Has verifier: {handler._envelope_verifier is not None}")  # type: ignore
+            print(f"  - Has encryption manager: {handler._encryption_manager is not None}")  # type: ignore
+            print(f"  - Has security policy: {handler._security_policy is not None}")  # type: ignore
 
             # The critical test: does the handler have the signer that was auto-selected?
-            assert handler._envelope_signer is node._security_manager.envelope_signer, ( # type: ignore
+            assert handler._envelope_signer is node._security_manager.envelope_signer, (  # type: ignore
                 "Handler should have the same signer as the node"
             )
-            assert handler._envelope_signer is not None, "Handler should have a signer for outbound signing" # type: ignore
+            assert handler._envelope_signer is not None, "Handler should have a signer for outbound signing"  # type: ignore
 
             print("✅ Success: Envelope security handler has the correct auto-selected signer")
         else:
             print("  - Handler is None - checking security manager directly")
             print(f"  - Security manager has signer: {node._security_manager.envelope_signer is not None}")
-            print(f"  - Security manager has verifier: {node._security_manager.envelope_verifier is not None}")
+            print(
+                f"  - Security manager has verifier: {node._security_manager.envelope_verifier is not None}"
+            )
             print("✅ Success: Security manager has required components even without handler")
 
     print("\n=== Integration Test Complete ===")

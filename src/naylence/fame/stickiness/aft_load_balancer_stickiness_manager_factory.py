@@ -6,13 +6,12 @@ from pydantic import Field
 
 from naylence.fame.security.keys.key_provider import KeyProvider
 from naylence.fame.stickiness.aft_verifier import AFTVerifier
-from naylence.fame.stickiness.stickiness_mode import StickinessMode
-
 from naylence.fame.stickiness.load_balancer_stickiness_manager import LoadBalancerStickinessManager
 from naylence.fame.stickiness.load_balancer_stickiness_manager_factory import (
     LoadBalancerStickinessManagerConfig,
     LoadBalancerStickinessManagerFactory,
 )
+from naylence.fame.stickiness.stickiness_mode import StickinessMode
 
 
 class AFTLoadBalancerStickinessManagerConfig(LoadBalancerStickinessManagerConfig):

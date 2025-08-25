@@ -28,7 +28,7 @@ async def test_trust_store_fallback():
 
     # Test validation with no trust store
     try:
-        key_infos = await validator1.validate_keys([])
+        await validator1.validate_keys([])
         result = True
         message = ""
     except Exception as e:
@@ -52,7 +52,7 @@ async def test_trust_store_fallback():
 
         # Test validation with configured trust store
         try:
-            key_infos = await validator2.validate_keys([])
+            await validator2.validate_keys([])
             result = True
             message = ""
         except Exception as e:
@@ -77,7 +77,7 @@ async def test_trust_store_fallback():
 
     # Test validation with environment variable
     try:
-        key_infos = await validator3.validate_keys([])
+        await validator3.validate_keys([])
         result = True
         message = ""
     except Exception as e:
