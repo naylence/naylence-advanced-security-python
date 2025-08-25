@@ -2,13 +2,13 @@
 
 **Naylence Advanced Security** is a high-assurance extension for the [Naylence Agentic Fabric](https://github.com/naylence) that delivers advanced cryptographic and policy-driven protections for multi-agent systems. It is designed for environments where agents, services, and organizations must interact across trust domains while preserving **confidentiality, integrity, durability, and policy compliance**.
 
-At its core, Naylence already provides a zero-trust, message-oriented backbone for federated agents. This package extends that foundation with **overlay security features** and **pluggable security managers** that make the system resilient in complex, federated, and regulated deployments.
+At its core, Naylence already provides a zero-trust, message-oriented backbone for federated agents. This package extends that foundation with **overlay security features**, **pluggable security managers**, and **secure sticky sessions** that make the system resilient in complex, federated, and regulated deployments.
 
 ---
 
 ## Key Features
 
-* **Overlay Encryption & Sealed Channels**
+* **Overlay end-to-end encryption (E2EE) & Sealed Channels**
   Adds an additional cryptographic layer on top of channel security. Messages remain encrypted and authenticated across multi-hop routes, even if intermediate sentinels or transport layers are compromised.
 
 * **Envelope Signing & Identity Assurance**
@@ -17,12 +17,8 @@ At its core, Naylence already provides a zero-trust, message-oriented backbone f
 * **Security Profiles**
   Predefined profiles (`open`, `perimeter`, `standard`, `strict-overlay`) encapsulate best-practice combinations of authentication, encryption, and authorization. Developers can choose the right trade-off between ease of use and maximum assurance.
 
-* **Pluggable Security Managers**
-  The package exposes extension points for `SecurityManagerFactory` and `AuthorizerFactory`. This allows custom implementations of:
-
-  * Shared-secret or OAuth2 authorization
-  * Policy-driven security contexts
-  * Custom identity backends (PKI, SPIFFE, or bespoke systems)
+* **Secure Sticky Sessions**
+  Provides cryptographically bound sticky sessions, ensuring that long-running agent conversations remain secure and bound to the original security context without risk of session hijacking.
 
 * **Durable Cross-Domain Trust**
   Enables secure federation across organizations or cloud providers, with guarantees that **policies, not perimeter assumptions**, determine who can talk to whom.
