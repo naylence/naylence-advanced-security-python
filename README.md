@@ -1,7 +1,3 @@
-Here’s a draft README description for your **Naylence Advanced Security** package. I kept it focused on explaining what the package does, how it fits into Naylence, and what problems it solves—without going into installation or boilerplate.
-
----
-
 # Naylence Advanced Security
 
 **Naylence Advanced Security** is a high-assurance extension for the [Naylence Agentic Fabric](https://github.com/naylence) that delivers advanced cryptographic and policy-driven protections for multi-agent systems. It is designed for environments where agents, services, and organizations must interact across trust domains while preserving **confidentiality, integrity, durability, and policy compliance**.
