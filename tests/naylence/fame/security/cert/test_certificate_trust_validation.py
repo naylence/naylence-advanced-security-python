@@ -16,8 +16,8 @@ try:
     import sys
 
     from naylence.fame.core import SecuritySettings, SigningMaterial
-    from naylence.fame.security.cert.ca_service import create_test_ca
     from naylence.fame.security.cert.default_certificate_manager import DefaultCertificateManager
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
     from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
 
     print("✓ Fame imports successful")
@@ -32,7 +32,7 @@ def test_certificate_trust_validation():
 
     # Create a certificate manager for testing validation functions
     security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-    cert_manager = DefaultCertificateManager(security_settings)
+    cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
     # Create two different CA certificates
     print("1. Creating test CA certificates...")
@@ -87,7 +87,7 @@ def test_certificate_trust_validation():
         # Generate certificate using trusted CA (via CA service, not test method)
         # We'll use the CA service directly to ensure we use the same CA
         try:
-            from naylence.fame.security.cert.ca_service import CASigningService
+            from naylence.fame.security.cert.internal_ca_service import CASigningService
             from naylence.fame.util.util import secure_digest
 
             physical_path = "/test/valid/path"
@@ -154,7 +154,7 @@ def test_certificate_trust_validation():
 
         # Generate certificate using different CA
         try:
-            from naylence.fame.security.cert.ca_service import CASigningService
+            from naylence.fame.security.cert.internal_ca_service import CASigningService
             from naylence.fame.util.util import secure_digest
 
             physical_path = "/test/invalid/path"
@@ -223,7 +223,7 @@ async def test_node_startup_with_invalid_certificate():
 
     # Create a certificate manager for testing validation functions
     security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-    cert_manager = DefaultCertificateManager(security_settings)
+    cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
     # Create trusted and untrusted CAs
     print("1. Setting up CA certificates...")
@@ -258,7 +258,7 @@ async def test_node_startup_with_invalid_certificate():
         )
         # Generate certificate with untrusted CA
         try:
-            from naylence.fame.security.cert.ca_service import CASigningService
+            from naylence.fame.security.cert.internal_ca_service import CASigningService
             from naylence.fame.util.util import secure_digest
 
             physical_path = "/test/untrusted/path"

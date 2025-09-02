@@ -5,11 +5,17 @@ Default implementation of certificate management for node signing material provi
 from __future__ import annotations
 
 import os
-from typing import Optional
+from typing import Any, Optional
 
 from naylence.fame.core import NodeWelcomeFrame, SecuritySettings, SigningMaterial
-from naylence.fame.security.cert.certificate_client import CertificateClient, CertificateRequestError
+from naylence.fame.factory import create_resource
+from naylence.fame.grants.http_connection_grant import HttpConnectionGrant
+from naylence.fame.node.node_like import NodeLike
+from naylence.fame.security.auth.auth_injection_strategy import AuthInjectionStrategy
+from naylence.fame.security.auth.auth_injection_strategy_factory import AuthInjectionStrategyFactory
+from naylence.fame.security.cert.ca_service_client import CAServiceClient, CertificateRequestError
 from naylence.fame.security.cert.certificate_manager import CertificateManager
+from naylence.fame.security.cert.grants import GRANT_PURPOSE_CA_SIGN
 from naylence.fame.security.crypto.providers.crypto_provider import (
     CryptoProvider,
     get_crypto_provider,
@@ -18,6 +24,8 @@ from naylence.fame.security.policy.security_policy import SigningConfig
 from naylence.fame.util.logging import getLogger
 
 logger = getLogger(__name__)
+
+ENV_VAR_FAME_CA_CERTS = "FAME_CA_CERTS"
 
 
 class DefaultCertificateManager(CertificateManager):
@@ -28,57 +36,101 @@ class DefaultCertificateManager(CertificateManager):
     removing the need for scattered certificate handling throughout the codebase.
     """
 
-    def __init__(self, security_settings: Optional[SecuritySettings] = None, **kwargs):
+    def __init__(
+        self,
+        signing: Optional[SigningConfig] = None,
+        security_settings: Optional[SecuritySettings] = None,
+        auth_strategy: Optional[AuthInjectionStrategy] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
+        self._signing = signing or SigningConfig()
         self.security_settings = security_settings or SecuritySettings()
+        self._auth_strategy = auth_strategy
 
-    async def ensure_root_certificate(self, node_id: str, physical_path: str, logicals: list[str]) -> bool:
+    async def on_node_started(self, node: NodeLike) -> None:
         """
-        Handle certificate provisioning when a root node starts.
+        Handle certificate provisioning when a node has started.
+
+        This method implements the NodeEventListener interface and is called
+        when a node has completed initialization and is ready for operation.
 
         Args:
-            node_id: Node identifier
-            physical_path: Physical path of the node
-            logicals: List of logical addresses this node will serve
+            node: The node that has been started
+        """
+        # Only provision certificates for root nodes (nodes without parents)
+        if node.has_parent:
+            logger.debug(
+                "skipping_certificate_provisioning_for_child_node",
+                node_id=node.id,
+                has_parent=node.has_parent,
+            )
+            return
+
+        # Set up crypto provider context
+        from naylence.fame.security.crypto.providers.crypto_provider import (
+            get_crypto_provider,
+        )
+
+        crypto_provider = get_crypto_provider()
+        crypto_provider.set_node_context_from_nodelike(node)
+
+    def _get_ca_sign_grant(self, connection_grants: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """Get the node attach grant from the list of connection grants."""
+        for grant in connection_grants:
+            if grant.get("purpose") == GRANT_PURPOSE_CA_SIGN:
+                return grant
+        return None
+
+    async def on_welcome(self, welcome_frame) -> None:
+        """
+        Handle certificate provisioning after receiving a welcome frame.
+
+        Args:
+            welcome_frame: NodeWelcomeFrame from admission process
 
         Returns:
             True if certificate is available or not needed, False if provisioning failed
         """
-        # Check if we need X.509 certificates based on security profile or signing config
-        needs_x509 = (
-            self.security_settings.signing_material == SigningMaterial.X509_CHAIN
-            or self.signing_config.signing_material == SigningMaterial.X509_CHAIN
-        )
+        # Check if the welcome frame specifies X.509 requirement
+        needs_x509 = False
+
+        security_settings = welcome_frame.security_settings
+        if security_settings:
+            needs_x509 = security_settings.signing_material == SigningMaterial.X509_CHAIN
+        else:
+            # Fall back to local signing config
+            needs_x509 = self._signing.signing_material == SigningMaterial.X509_CHAIN
 
         if not needs_x509:
             logger.debug(
-                "certificate_not_required", signing_material=self.security_settings.signing_material
+                "certificate_not_required_by_welcome",
+                security_settings=security_settings,
             )
-            return True
+            return
 
-        logger.debug("provisioning_certificate_for_root_node", node_id=node_id, physical_path=physical_path)
-
-        success = await self._ensure_node_certificate(
-            node_id=node_id,
-            physical_path=physical_path,
-            logicals=logicals,
+        logger.debug(
+            "provisioning_certificate_after_welcome",
+            node_id=welcome_frame.system_id,
+            assigned_path=welcome_frame.assigned_path,
         )
 
-        if success:
-            logger.debug(
-                "certificate_provisioned_successfully_for_root",
-                node_id=node_id,
-                physical_path=physical_path,
-            )
-        else:
-            logger.error(
-                "certificate_provisioning_failed_for_root",
-                node_id=node_id,
-                physical_path=physical_path,
-                message="Certificate provisioning or validation failed - node cannot start",
-            )
+        success = await self.ensure_certificate(
+            welcome_frame=welcome_frame,
+        )
 
-        return success
+        if not success:
+            node_id = welcome_frame.system_id or "unknown"
+            assigned_path = welcome_frame.assigned_path
+            logger.error(
+                "certificate_provisioning_failed_for_child",
+                node_id=node_id,
+                assigned_path=assigned_path,
+                message="Certificate provisioning or validation failed - node cannot proceed",
+            )
+            # Child nodes must have valid certificates when X509_CHAIN is required
+            # Failing to obtain a certificate is a security failure
+            raise RuntimeError(f"Child node {node_id} cannot proceed: certificate validation failed")
 
     def _validate_certificate_against_trust_anchors(
         self, crypto_provider: CryptoProvider, node_id: str
@@ -102,13 +154,14 @@ class DefaultCertificateManager(CertificateManager):
             from naylence.fame.security.cert.util import _check_trust_anchor
 
             # Get trust store from environment
-            trust_store_pem = os.environ.get("FAME_CA_CERTS")
+            trust_store_pem = os.environ.get(ENV_VAR_FAME_CA_CERTS)
             if not trust_store_pem:
                 logger.error(
                     "trust_anchor_validation_failed",
                     node_id=node_id,
-                    reason="FAME_CA_CERTS_not_set",
-                    message="FAME_CA_CERTS environment variable is required for certificate validation",
+                    reason=f"{ENV_VAR_FAME_CA_CERTS}_not_set",
+                    message=f"{ENV_VAR_FAME_CA_CERTS} "
+                    "environment variable is required for certificate validation",
                 )
                 return False
 
@@ -213,7 +266,7 @@ class DefaultCertificateManager(CertificateManager):
         node_id: Optional[str] = None,
         physical_path: Optional[str] = None,
         logicals: Optional[list[str]] = None,
-        ca_service_url: Optional[str] = None,
+        ca_sign_grant: Optional[dict[str, Any]] = None,
         crypto_provider: Optional[CryptoProvider] = None,
     ) -> bool:
         """
@@ -283,10 +336,17 @@ class DefaultCertificateManager(CertificateManager):
             logger.debug(
                 "requesting_certificate_from_ca_service",
                 node_id=node_id,
-                ca_service_url=ca_service_url or os.environ.get("FAME_CA_SERVICE_URL", "default"),
+                # ca_service_url=ca_service_url or os.environ.get("FAME_CA_SERVICE_URL", "default"),
             )
 
-            async with CertificateClient(ca_service_url=ca_service_url) as client:
+            ca_sign_grant_validated = HttpConnectionGrant.model_validate(ca_sign_grant or {})
+            auth_strategy = (
+                await create_resource(AuthInjectionStrategyFactory, ca_sign_grant_validated.auth)
+                or self._auth_strategy
+            )
+            assert auth_strategy, "Failed to create or retrieve auth strategy"
+            async with CAServiceClient(connection_grant=ca_sign_grant_validated) as client:
+                await auth_strategy.apply(client)
                 certificate_pem, certificate_chain_pem = await client.request_certificate(
                     csr_pem=csr_pem,
                     requester_id=node_id,
@@ -319,7 +379,7 @@ class DefaultCertificateManager(CertificateManager):
             logger.error("certificate_provisioning_failed", node_id=node_id, error=str(e), exc_info=True)
             return False
 
-    async def ensure_non_root_certificate(
+    async def ensure_certificate(
         self,
         welcome_frame: NodeWelcomeFrame,
         ca_service_url: Optional[str] = None,
@@ -356,25 +416,28 @@ class DefaultCertificateManager(CertificateManager):
             )
             return False
 
+        needs_x509 = (
+            self.security_settings.signing_material == SigningMaterial.X509_CHAIN
+            or self._signing.signing_material == SigningMaterial.X509_CHAIN
+        )
+
+        if not needs_x509:
+            logger.debug(
+                "certificate_not_required", signing_material=self.security_settings.signing_material
+            )
+            return True
+
+        ca_sign_grant = self._get_ca_sign_grant(welcome_frame.connection_grants or [])
+        if not ca_sign_grant:
+            logger.warning(
+                "welcome_frame_missing_ca_sign_grant",
+                message="Cannot provision certificate without CA sign connection grant",
+            )
+            return False
+
         return await self._ensure_node_certificate(
             node_id=node_id,
             physical_path=physical_path,
             logicals=logicals,
-            ca_service_url=ca_service_url,
+            ca_sign_grant=ca_sign_grant,
         )
-
-
-def create_certificate_manager(
-    security_settings: Optional[SecuritySettings] = None, signing_config: Optional[SigningConfig] = None
-) -> DefaultCertificateManager:
-    """
-    Factory function to create a DefaultCertificateManager instance.
-
-    Args:
-        security_settings: Security profile with signing material preferences
-        signing_config: Signing configuration from security policy
-
-    Returns:
-        Configured DefaultCertificateManager instance
-    """
-    return DefaultCertificateManager(security_settings, signing_config=signing_config)

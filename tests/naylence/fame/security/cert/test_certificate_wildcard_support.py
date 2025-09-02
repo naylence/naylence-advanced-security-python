@@ -37,7 +37,7 @@ class TestCertificateWildcardSupport:
         result = logical_patterns_to_dns_constraints(patterns)
         assert result == expected
 
-    @patch("naylence.fame.security.cert.ca_service.require_crypto")
+    @patch("naylence.fame.security.cert.internal_ca_service.require_crypto")
     def test_ca_service_uses_dns_constraints(self, mock_require_crypto):
         """Test that CA service uses proper DNS constraints for certificates."""
         # Mock the crypto requirements
@@ -46,7 +46,7 @@ class TestCertificateWildcardSupport:
         # Clear any existing imports of the ca_service module to ensure clean mocking
         import sys
 
-        ca_service_module = "naylence.fame.security.cert.ca_service"
+        ca_service_module = "naylence.fame.security.cert.internal_ca_service"
         if ca_service_module in sys.modules:
             del sys.modules[ca_service_module]
 
@@ -68,7 +68,7 @@ class TestCertificateWildcardSupport:
 
 if __name__ == "__main__":
 
-    @patch("naylence.fame.security.cert.ca_service.require_crypto")
+    @patch("naylence.fame.security.cert.internal_ca_service.require_crypto")
     def test_ca_service_uses_dns_constraints(self, mock_require_crypto):
         """Test that CA service uses proper DNS constraints for certificates."""
         # Mock the crypto requirements
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         # Clear any existing imports of the ca_service module to ensure clean mocking
         import sys
 
-        ca_service_module = "naylence.fame.security.cert.ca_service"
+        ca_service_module = "naylence.fame.security.cert.internal_ca_service"
         if ca_service_module in sys.modules:
             del sys.modules[ca_service_module]
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             },
         ):
             # Import the CA service after mocking
-            from naylence.fame.security.cert.ca_service import CASigningService
+            from naylence.fame.security.cert.internal_ca_service import CASigningService
 
             # Create CA service instance with mocked dependencies
             ca_service = CASigningService(

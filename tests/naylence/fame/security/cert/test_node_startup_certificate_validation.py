@@ -12,8 +12,8 @@ import os
 import pytest
 
 from naylence.fame.core import SecuritySettings, SigningMaterial
-from naylence.fame.security.cert.ca_service import create_test_ca
-from naylence.fame.security.cert.default_certificate_manager import create_certificate_manager
+from naylence.fame.security.cert.default_certificate_manager import DefaultCertificateManager
+from naylence.fame.security.cert.internal_ca_service import create_test_ca
 from naylence.fame.security.crypto.providers.crypto_provider import get_crypto_provider
 
 
@@ -42,7 +42,7 @@ async def test_node_startup_certificate_validation_failure():
 
         # Create certificate manager with X509 requirement
         security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-        cert_manager = create_certificate_manager(security_settings=security_settings)
+        cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
         # Mock a node-like object
         class MockNode:
@@ -55,9 +55,10 @@ async def test_node_startup_certificate_validation_failure():
 
         node = MockNode()
 
-        # Test that node startup fails due to certificate validation
-        with pytest.raises(RuntimeError, match="certificate validation failed"):
-            await cert_manager.on_node_started(node)
+        # Test that node startup succeeds - certificate validation is not done in on_node_started
+        # Certificate validation happens during certificate provisioning, not node startup
+        await cert_manager.on_node_started(node)
+        print("✓ Node startup completed (certificate validation happens during provisioning, not startup)")
 
     finally:
         # Restore original environment
@@ -94,7 +95,7 @@ async def test_node_startup_certificate_validation_success():
 
         # Create certificate manager with X509 requirement
         security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-        cert_manager = create_certificate_manager(security_settings=security_settings)
+        cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
         # Create and configure crypto provider with a valid certificate signed by our test CA
         crypto_provider = get_crypto_provider()
@@ -103,7 +104,7 @@ async def test_node_startup_certificate_validation_success():
         )
 
         # Generate a certificate using our test CA
-        from naylence.fame.security.cert.ca_service import CASigningService
+        from naylence.fame.security.cert.internal_ca_service import CASigningService
         from naylence.fame.util.util import secure_digest
 
         physical_path = "/test/success/path"
@@ -162,7 +163,7 @@ async def test_certificate_manager_without_x509_requirement():
 
     # Create certificate manager without X509 requirement (RAW_KEY)
     security_settings = SecuritySettings(signing_material=SigningMaterial.RAW_KEY)
-    cert_manager = create_certificate_manager(security_settings=security_settings)
+    cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
     # Mock a node-like object
     class MockNode:
@@ -185,7 +186,7 @@ async def test_certificate_manager_child_node():
 
     # Create certificate manager with X509 requirement
     security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-    cert_manager = create_certificate_manager(security_settings=security_settings)
+    cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
     # Mock a child node (has_parent = True)
     class MockChildNode:
@@ -224,7 +225,7 @@ async def test_child_node_certificate_validation_failure():
 
         # Create certificate manager with X509 requirement
         security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-        cert_manager = create_certificate_manager(security_settings=security_settings)
+        cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
         # Mock a welcome frame that requires X509
         class MockWelcomeFrame:
@@ -233,6 +234,14 @@ async def test_child_node_certificate_validation_failure():
                 self.assigned_path = "/parent/test-child-node"
                 self.accepted_logicals = ["/child"]
                 self.security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
+                # Provide a CA sign grant that will fail due to unreachable CA service
+                self.connection_grants = [
+                    {
+                        "purpose": "ca-sign",
+                        "url": "http://unreachable-ca-service:9999",
+                        "auth": {"type": "none"},
+                    }
+                ]
 
         welcome_frame = MockWelcomeFrame()
 
@@ -279,7 +288,7 @@ async def test_security_manager_child_node_certificate_validation_failure():
         security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
 
         # Create certificate manager with X509 requirement
-        cert_manager = create_certificate_manager(security_settings=security_settings)
+        cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
         # Create security policy and manager with certificate manager
         policy = DefaultSecurityPolicy()
@@ -292,6 +301,14 @@ async def test_security_manager_child_node_certificate_validation_failure():
                 self.assigned_path = "/parent/test-child-node"
                 self.accepted_logicals = ["/child"]
                 self.security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
+                # Provide a CA sign grant that will fail due to unreachable CA service
+                self.connection_grants = [
+                    {
+                        "purpose": "ca-sign",
+                        "url": "http://unreachable-ca-service:9999",
+                        "auth": {"type": "none"},
+                    }
+                ]
 
         welcome_frame = MockWelcomeFrame()
 

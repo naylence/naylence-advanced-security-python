@@ -1,6 +1,6 @@
 [project]
 name = "naylence-advanced-security"
-version = "0.1.6"
+version = "0.1.11"
 description = "Naylence Advanced Security"
 authors = [
     {name = "naylencedev@gmail.com"}
@@ -17,7 +17,7 @@ packages = [
 [tool.poetry.dependencies]
 cryptography = { version = "^45.0.2", optional = false }
 pyjwt = { version = "^2.10.1", optional = false }
-naylence-runtime = "^0.1.61"
+naylence-runtime = "^0.1.76"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -29,9 +29,6 @@ pytest-asyncio = "^0.26.0"
 hypothesis = "^6.131.30"
 coverage = "^7.9.2"
 pytest-cov = "^6.2.1"
-
-[tool.poetry.group.api.dependencies]
-fastapi = "^0.115.12"
 
 [tool.poetry.group.mcp.dependencies]
 mcp = "^1.9.1"
@@ -147,3 +144,9 @@ AFTLoadBalancerStickinessManager = "naylence.fame.stickiness.aft_load_balancer_s
 
 [project.entry-points."naylence.KeyManagerFactory"]
 X5CKeyManager = "naylence.fame.security.keys.x5c_key_manager_factory:X5CKeyManagerFactory"
+
+[project.entry-points."naylence.CAServiceFactory"]
+DefaultCAService = "naylence.fame.security.cert.default_ca_service_factory:DefaultCAServiceFactory"
+
+[project.entry-points."naylence.WelcomeServiceFactory"]
+AdvancedWelcomeService = "naylence.fame.welcome.advanced_welcome_service_factory:AdvancedWelcomeServiceFactory"

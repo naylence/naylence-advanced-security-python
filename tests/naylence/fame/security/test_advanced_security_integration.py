@@ -131,7 +131,7 @@ class MockEncryptionManager(NodeEventListener):
     async def on_node_attach_to_upstream(self, node, attach_info):
         self.attach_calls.append(("upstream", attach_info))
 
-    async def on_attach_to_peer(self, node, attach_info, connector):
+    async def on_node_attach_to_peer(self, node, attach_info, connector):
         self.attach_calls.append(("peer", attach_info, connector))
 
 
@@ -322,7 +322,7 @@ class TestAdvancedNodeLifecycle:
             "parent_keys": [{"kid": "peer-key", "kty": "OKP", "crv": "Ed25519", "use": "sig"}],
         }
 
-        await manager.on_attach_to_peer(advanced_sentinel_node, attach_info, mock_connector)  # type: ignore
+        await manager.on_node_attach_to_peer(advanced_sentinel_node, attach_info, mock_connector)  # type: ignore
 
         # Should have added peer keys
         assert len(enhanced_key_manager.keys_added) == 1

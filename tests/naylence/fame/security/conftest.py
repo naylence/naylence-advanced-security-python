@@ -74,7 +74,7 @@ def create_test_cert_and_key():
     # Add SID as OtherName extension (this would need the proper SID OID)
     try:
         # Try to add a SID OtherName extension
-        from naylence.fame.security.cert.ca_service import SID_OID
+        from naylence.fame.security.cert.internal_ca_service import SID_OID
 
         sid_oid = x509.ObjectIdentifier(SID_OID)
         # Encode "test-node-123" as DER UTF8String

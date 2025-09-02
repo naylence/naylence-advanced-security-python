@@ -526,7 +526,7 @@ def sid_from_cert(cert) -> Optional[str]:
                 if uri.startswith("spiffe://"):
                     # Extract SID from SPIFFE ID path
                     try:
-                        from .ca_service import extract_sid_from_spiffe_id
+                        from .internal_ca_service import extract_sid_from_spiffe_id
 
                         return extract_sid_from_spiffe_id(uri)
                     except ImportError:
@@ -540,7 +540,7 @@ def sid_from_cert(cert) -> Optional[str]:
 
     # Fallback to legacy OtherName extension method
     try:
-        from .ca_service import SID_OID
+        from .internal_ca_service import SID_OID
 
         san = cert.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value
 
@@ -592,7 +592,7 @@ def host_logicals_from_cert(cert) -> List[str]:
 
     # First try SPIFFE-compatible extraction from private extension
     try:
-        from .ca_service import extract_logical_hosts_from_cert
+        from .internal_ca_service import extract_logical_hosts_from_cert
 
         logical_hosts = extract_logical_hosts_from_cert(cert)
         if logical_hosts:

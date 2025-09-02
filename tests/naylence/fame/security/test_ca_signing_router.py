@@ -11,18 +11,19 @@ from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-from naylence.fame.security.fastapi.ca_signing_router import (
+from naylence.fame.security.cert.ca_fastapi_router import (
     CertificateIssuanceResponse,
     CertificateSigningRequest,
-    LocalCASigningService,
-    create_ca_signing_router,
+    create_ca_router,
 )
+from naylence.fame.security.cert.ca_service_factory import CAServiceFactory
+from naylence.fame.security.cert.default_ca_service import DefaultCAService
 
 
 @pytest.fixture
 def test_ca_setup():
     """Create test CA and intermediate CA setup."""
-    from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+    from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
     # Create root CA
     root_cert_pem, root_key_pem = create_test_ca()
@@ -86,12 +87,12 @@ def test_csr():
     )
 
 
-class TestLocalCASigningService:
+class TestDefaultCAService:
     """Test Local CA signing service."""
 
     def test_root_ca_only_initialization(self, test_ca_setup):
         """Test initialization with root CA only."""
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"], ca_key_pem=test_ca_setup["root_key_pem"]
         )
 
@@ -110,7 +111,7 @@ class TestLocalCASigningService:
         """Test initialization with intermediate CA chain."""
         intermediate_chain_pem = test_ca_setup["intermediate_cert_pem"]
 
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             intermediate_chain_pem=intermediate_chain_pem,
@@ -158,7 +159,7 @@ class TestLocalCASigningService:
                     "FAME_SIGNING_KEY_FILE": signing_key_file,
                 },
             ):
-                ca_service = LocalCASigningService()
+                ca_service = DefaultCAService()
                 ca_cert, ca_key, intermediate_chain, signing_cert, signing_key = (
                     ca_service._get_ca_credentials()
                 )
@@ -189,7 +190,7 @@ class TestLocalCASigningService:
                 "FAME_COMPLETE_CHAIN_FILE": "",
             },
         ):
-            ca_service = LocalCASigningService()
+            ca_service = DefaultCAService()
             ca_cert, ca_key, intermediate_chain, signing_cert, signing_key = (
                 ca_service._get_ca_credentials()
             )
@@ -202,7 +203,7 @@ class TestLocalCASigningService:
 
     def test_fallback_to_test_ca(self):
         """Test fallback to test CA when no credentials configured."""
-        ca_service = LocalCASigningService()
+        ca_service = DefaultCAService()
         ca_cert, ca_key, intermediate_chain, signing_cert, signing_key = ca_service._get_ca_credentials()
 
         # Should generate test CA
@@ -217,7 +218,7 @@ class TestLocalCASigningService:
 
     async def test_root_ca_signing(self, test_ca_setup, test_csr):
         """Test certificate signing with root CA only."""
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"], ca_key_pem=test_ca_setup["root_key_pem"]
         )
 
@@ -242,7 +243,7 @@ class TestLocalCASigningService:
 
     async def test_intermediate_ca_signing(self, test_ca_setup, test_csr):
         """Test certificate signing with intermediate CA."""
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             intermediate_chain_pem=test_ca_setup["intermediate_cert_pem"],
@@ -272,7 +273,7 @@ class TestLocalCASigningService:
     async def test_certificate_chain_order(self, test_ca_setup, test_csr):
         """Test that certificate chain is in correct order: node -> intermediate
         (root excluded for security)."""
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             intermediate_chain_pem=test_ca_setup["intermediate_cert_pem"],
@@ -319,7 +320,7 @@ class TestLocalCASigningService:
 
     async def test_certificate_ttl(self, test_ca_setup, test_csr):
         """Test that certificates have correct TTL (24 hours)."""
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             intermediate_chain_pem=test_ca_setup["intermediate_cert_pem"],
@@ -343,16 +344,19 @@ class TestLocalCASigningService:
 class TestCASigningRouter:
     """Test FastAPI router for CA signing."""
 
-    def test_create_router_default(self):
+    @pytest.mark.asyncio
+    async def test_create_router_default(self):
         """Test creating router with default CA service."""
-        router = create_ca_signing_router()
+        ca_service = await CAServiceFactory.create_ca_service()
+        router = create_ca_router(ca_service=ca_service)
         assert router is not None
         assert router.prefix == "/fame/v1/ca"
         assert len(router.routes) == 2  # /sign and /health endpoints
 
-    def test_create_router_custom_service(self, test_ca_setup):
+    @pytest.mark.asyncio
+    async def test_create_router_custom_service(self, test_ca_setup):
         """Test creating router with custom CA service."""
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             intermediate_chain_pem=test_ca_setup["intermediate_cert_pem"],
@@ -360,17 +364,19 @@ class TestCASigningRouter:
             signing_key_pem=test_ca_setup["intermediate_key_pem"],
         )
 
-        router = create_ca_signing_router(ca_service=ca_service, prefix="/custom/ca")
+        router = create_ca_router(ca_service=ca_service, prefix="/custom/ca")
         assert router is not None
         assert router.prefix == "/custom/ca"
 
+    @pytest.mark.asyncio
     async def test_router_health_endpoint(self):
         """Test the health check endpoint."""
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
         app = FastAPI()
-        router = create_ca_signing_router()
+        ca_service = await CAServiceFactory.create_ca_service()
+        router = create_ca_router(ca_service=ca_service)
         app.include_router(router)
 
         client = TestClient(app)
@@ -379,17 +385,18 @@ class TestCASigningRouter:
         assert response.status_code == 200
         assert response.json() == {"status": "healthy", "service": "ca-signing"}
 
+    @pytest.mark.asyncio
     async def test_router_sign_endpoint_root_ca(self, test_ca_setup, test_csr):
         """Test the certificate signing endpoint with root CA."""
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"], ca_key_pem=test_ca_setup["root_key_pem"]
         )
 
         app = FastAPI()
-        router = create_ca_signing_router(ca_service=ca_service)
+        router = create_ca_router(ca_service=ca_service)
         app.include_router(router)
 
         client = TestClient(app)
@@ -403,12 +410,13 @@ class TestCASigningRouter:
         assert "expires_at" in data
         assert "-----BEGIN CERTIFICATE-----" in data["certificate_pem"]
 
+    @pytest.mark.asyncio
     async def test_router_sign_endpoint_intermediate_ca(self, test_ca_setup, test_csr):
         """Test the certificate signing endpoint with intermediate CA."""
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             intermediate_chain_pem=test_ca_setup["intermediate_cert_pem"],
@@ -417,7 +425,7 @@ class TestCASigningRouter:
         )
 
         app = FastAPI()
-        router = create_ca_signing_router(ca_service=ca_service)
+        router = create_ca_router(ca_service=ca_service)
         app.include_router(router)
 
         client = TestClient(app)
@@ -436,17 +444,18 @@ class TestCASigningRouter:
         cert_count = len([part for part in chain_parts if "-----BEGIN CERTIFICATE-----" in part])
         assert cert_count == 2
 
+    @pytest.mark.asyncio
     async def test_router_invalid_csr(self, test_ca_setup):
         """Test the signing endpoint with invalid CSR."""
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
-        ca_service = LocalCASigningService(
+        ca_service = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"], ca_key_pem=test_ca_setup["root_key_pem"]
         )
 
         app = FastAPI()
-        router = create_ca_signing_router(ca_service=ca_service)
+        router = create_ca_router(ca_service=ca_service)
         app.include_router(router)
 
         invalid_csr = CertificateSigningRequest(
@@ -463,9 +472,10 @@ class TestCASigningRouter:
 class TestIntermediateCACrossValidation:
     """Test cross-validation scenarios with multiple intermediate CAs."""
 
+    @pytest.mark.asyncio
     async def test_different_intermediate_ca_chain_validation(self, test_ca_setup):
         """Test that certificates from different intermediate CAs can be validated using the full chain."""
-        from naylence.fame.security.cert.ca_service import CASigningService
+        from naylence.fame.security.cert.internal_ca_service import CASigningService
 
         # Create a second intermediate CA
         root_ca_service = CASigningService(test_ca_setup["root_cert_pem"], test_ca_setup["root_key_pem"])
@@ -493,14 +503,14 @@ class TestIntermediateCACrossValidation:
         ).decode()
 
         # Create two different CA services with different intermediate CAs
-        ca_service_1 = LocalCASigningService(
+        ca_service_1 = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             signing_cert_pem=test_ca_setup["intermediate_cert_pem"],
             signing_key_pem=test_ca_setup["intermediate_key_pem"],
         )
 
-        ca_service_2 = LocalCASigningService(
+        ca_service_2 = DefaultCAService(
             ca_cert_pem=test_ca_setup["root_cert_pem"],
             ca_key_pem=test_ca_setup["root_key_pem"],
             signing_cert_pem=intermediate2_cert_pem,

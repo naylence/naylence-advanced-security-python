@@ -16,7 +16,7 @@ try:
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import ed25519
 
-    from naylence.fame.security.cert.ca_service import CASigningService
+    from naylence.fame.security.cert.internal_ca_service import CASigningService
 
     CRYPTO_AVAILABLE = True
 except ImportError:

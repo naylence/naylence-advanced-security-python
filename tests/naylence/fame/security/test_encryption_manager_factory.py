@@ -2,7 +2,7 @@
 
 import pytest
 
-from naylence.fame.core import create_resource
+from naylence.fame.factory import create_resource
 from naylence.fame.security.encryption.composite_encryption_manager import CompositeEncryptionManager
 from naylence.fame.security.encryption.composite_encryption_manager_factory import (
     CompositeEncryptionManagerConfig,

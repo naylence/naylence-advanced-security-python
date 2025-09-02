@@ -4,7 +4,8 @@ Test the complete CertificateManager interface-based architecture with extension
 
 import pytest
 
-from naylence.fame.core import ExtensionManager, SigningMaterial, create_resource
+from naylence.fame.core import SigningMaterial
+from naylence.fame.factory import ExtensionManager, create_resource
 from naylence.fame.security.cert.certificate_manager import CertificateManager
 from naylence.fame.security.cert.certificate_manager_factory import CertificateManagerFactory
 
@@ -41,7 +42,7 @@ async def test_end_to_end_interface_based_certificate_manager():
     config = {
         "type": "DefaultCertificateManager",
         "security_settings": {"signing_material": "x509-chain"},
-        "signing_config": {"signing_material": "x509-chain"},
+        "signing": {"signing_material": "x509-chain"},
     }
 
     # 2. Create instance via resource framework
@@ -53,20 +54,18 @@ async def test_end_to_end_interface_based_certificate_manager():
 
     # 4. Verify configuration was applied
     assert cert_manager.security_settings.signing_material == SigningMaterial.X509_CHAIN
-    assert cert_manager.signing_config.signing_material == SigningMaterial.X509_CHAIN
+    assert cert_manager._signing.signing_material == SigningMaterial.X509_CHAIN
     print("✓ Configuration properly applied")
 
     # 5. Test interface methods exist
     assert hasattr(cert_manager, "on_node_started")
-    assert hasattr(cert_manager, "ensure_root_certificate")
     assert hasattr(cert_manager, "on_welcome")
     print("✓ All interface methods available")
 
-    # 6. Test that it's a NodeEventListener
-    from naylence.fame.node.node_event_listener import NodeEventListener
-
-    assert isinstance(cert_manager, NodeEventListener)
-    print("✓ Implements NodeEventListener interface")
+    # 6. Test that methods are callable
+    assert callable(getattr(cert_manager, "on_node_started"))
+    assert callable(getattr(cert_manager, "on_welcome"))
+    print("✓ Interface methods are callable")
 
     print("✅ End-to-end interface-based architecture working correctly!")
 
@@ -86,7 +85,7 @@ async def test_certificate_manager_interface_abstraction():
 
     # Can call interface methods
     # (We won't actually call them since they need proper setup, but verify they exist)
-    interface_methods = ["on_node_started", "ensure_root_certificate", "on_welcome"]
+    interface_methods = ["on_node_started", "on_welcome"]
     for method in interface_methods:
         assert hasattr(cert_manager, method)
         assert callable(getattr(cert_manager, method))

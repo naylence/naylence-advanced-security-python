@@ -4,7 +4,8 @@ Test for CertificateManager factory and resource framework integration.
 
 import pytest
 
-from naylence.fame.core import ExtensionManager, SecuritySettings, SigningMaterial, create_resource
+from naylence.fame.core import SecuritySettings, SigningMaterial
+from naylence.fame.factory import ExtensionManager, create_resource
 from naylence.fame.security.cert.certificate_manager_factory import (
     CertificateManagerFactory,
 )
@@ -28,7 +29,7 @@ async def test_certificate_manager_factory_with_resource_factory():
     # Test with DefaultCertificateManager
     config = DefaultCertificateManagerConfig(
         security_settings=SecuritySettings(signing_material=SigningMaterial.X509_CHAIN),
-        signing_config=SigningConfig(signing_material=SigningMaterial.X509_CHAIN),
+        signing=SigningConfig(signing_material=SigningMaterial.X509_CHAIN),
     )
 
     certificate_manager = await create_resource(CertificateManagerFactory, config)
@@ -36,8 +37,8 @@ async def test_certificate_manager_factory_with_resource_factory():
     assert certificate_manager is not None
     assert certificate_manager.security_settings is not None
     assert certificate_manager.security_settings.signing_material == SigningMaterial.X509_CHAIN
-    assert certificate_manager.signing_config is not None
-    assert certificate_manager.signing_config.signing_material == SigningMaterial.X509_CHAIN
+    assert certificate_manager._signing is not None
+    assert certificate_manager._signing.signing_material == SigningMaterial.X509_CHAIN
 
     print("✓ CertificateManager created via resource framework")
 
@@ -86,7 +87,7 @@ async def test_certificate_manager_factory_defaults():
     assert certificate_manager is not None
     # Should have default settings
     assert certificate_manager.security_settings is not None
-    assert certificate_manager.signing_config is not None
+    assert certificate_manager._signing is not None
 
     print("✓ CertificateManager created with defaults")
 

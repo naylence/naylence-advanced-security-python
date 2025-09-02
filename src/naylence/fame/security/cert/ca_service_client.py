@@ -6,7 +6,6 @@ Provides async HTTP client to request certificates from the CA signing service.
 
 from __future__ import annotations
 
-import os
 from datetime import datetime
 from typing import Optional, Tuple
 
@@ -14,9 +13,13 @@ import aiohttp
 from cryptography import x509
 from cryptography.x509.oid import ExtensionOID
 
+from naylence.fame.grants.http_connection_grant import HttpConnectionGrant
 from naylence.fame.util.logging import getLogger
 
 logger = getLogger(__name__)
+
+
+ENV_VAR_FAME_CA_SERVICE_URL = "FAME_CA_SERVICE_URL"
 
 
 def _extract_certificate_info(cert_pem: str) -> dict:
@@ -72,7 +75,7 @@ def _extract_certificate_info(cert_pem: str) -> dict:
 
         try:
             # Import here to avoid circular imports
-            from naylence.fame.security.cert.ca_service import (
+            from naylence.fame.security.cert.internal_ca_service import (
                 extract_logical_hosts_from_cert,
                 extract_node_id_from_cert,
                 extract_sid_from_cert,
@@ -217,7 +220,7 @@ def _format_certificate_info(cert_pem: str, cert_type: str = "Certificate") -> s
 
         try:
             # Import here to avoid circular imports
-            from naylence.fame.security.cert.ca_service import (
+            from naylence.fame.security.cert.internal_ca_service import (
                 extract_logical_hosts_from_cert,
                 extract_node_id_from_cert,
                 extract_sid_from_cert,
@@ -313,21 +316,28 @@ def _format_certificate_info(cert_pem: str, cert_type: str = "Certificate") -> s
         return f"=== {cert_type} Information ===\nError parsing certificate: {e}"
 
 
-class CertificateClient:
+class CAServiceClient:
     """Client for requesting certificates from a CA signing service."""
 
     def __init__(
         self,
-        ca_service_url: Optional[str] = None,
+        connection_grant: HttpConnectionGrant,
         session: Optional[aiohttp.ClientSession] = None,
         timeout_seconds: float = 30.0,
     ):
-        self._ca_service_url = ca_service_url or os.environ.get(
-            "FAME_CA_SERVICE_URL", "http://localhost:8099/fame/v1/ca"
+        assert isinstance(connection_grant, HttpConnectionGrant), (
+            "connection_grant must be an instance of HttpConnectionGrant"
         )
+
+        self._connection_grant = connection_grant
         self._session = session
         self._timeout = aiohttp.ClientTimeout(total=timeout_seconds)
         self._should_close_session = session is None
+        self._auth_header: Optional[str] = None
+
+    def set_auth_header(self, auth_header: str) -> None:
+        """Set the authorization header for outbound requests."""
+        self._auth_header = auth_header
 
     async def __aenter__(self):
         if self._session is None:
@@ -370,7 +380,7 @@ class CertificateClient:
             "logicals": logicals or [],
         }
 
-        url = f"{self._ca_service_url.rstrip('/')}/sign"
+        url = f"{self._connection_grant.url.rstrip('/')}/sign"
 
         logger.debug(
             "requesting_certificate",
@@ -380,8 +390,13 @@ class CertificateClient:
             logicals=logicals,
         )
 
+        # Prepare headers
+        headers = {}
+        if self._auth_header:
+            headers["Authorization"] = self._auth_header
+
         try:
-            async with self._session.post(url, json=request_data) as response:
+            async with self._session.post(url, json=request_data, headers=headers) as response:
                 if response.status == 200:
                     result = await response.json()
                     certificate_pem = result["certificate_pem"]
@@ -471,36 +486,3 @@ class CertificateRequestError(Exception):
     """Raised when a certificate request fails."""
 
     pass
-
-
-# Convenience function for one-off certificate requests
-async def request_certificate(
-    csr_pem: str,
-    requester_id: str,
-    physical_path: Optional[str] = None,
-    logicals: Optional[list[str]] = None,
-    ca_service_url: Optional[str] = None,
-) -> Tuple[str, str]:
-    """
-    Request a certificate from the CA service (convenience function).
-
-    This is a convenience wrapper that manages the client session automatically.
-    For multiple requests, prefer using CertificateClient as a context manager.
-
-    Args:
-        csr_pem: Certificate Signing Request in PEM format
-        requester_id: ID of the node requesting the certificate
-        physical_path: Physical path for the node (optional)
-        logicals: Logicals the node will serve (optional)
-        ca_service_url: CA service URL (optional, uses environment variable if not provided)
-
-    Returns:
-        Tuple of (certificate_pem, certificate_chain_pem)
-    """
-    async with CertificateClient(ca_service_url=ca_service_url) as client:
-        return await client.request_certificate(
-            csr_pem=csr_pem,
-            requester_id=requester_id,
-            physical_path=physical_path,
-            logicals=logicals,
-        )

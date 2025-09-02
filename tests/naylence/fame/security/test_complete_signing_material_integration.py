@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 # Core package imports
 from naylence.fame.core import SecuritySettings, SigningMaterial
 from naylence.fame.core.protocol.frames import NodeHelloFrame, NodeWelcomeFrame
-from naylence.fame.security.cert.default_certificate_manager import create_certificate_manager
+from naylence.fame.security.cert.default_certificate_manager import DefaultCertificateManager
 
 # Runtime package imports
 from naylence.fame.security.policy.security_policy import SigningConfig
@@ -65,13 +65,13 @@ def test_complete_signing_material_integration():
 
     # 6. Test certificate manager integration
     print("\n6. Testing certificate manager integration:")
-    cert_manager = create_certificate_manager(security_settings=core_profile, signing_config=runtime_config)
+    cert_manager = DefaultCertificateManager(security_settings=core_profile, signing=runtime_config)
     print("   ✓ CertificateManager created with both profile and config")
     print(
         f"   ✓ Manager.security_settings.signing_material = "
         f"{cert_manager.security_settings.signing_material}"
     )
-    print(f"   ✓ Manager.signing_config.signing_material = {cert_manager.signing_config.signing_material}")
+    print(f"   ✓ Manager.signing_config.signing_material = {cert_manager._signing.signing_material}")
 
     print("\n✅ Complete SigningMaterial integration test passed!")
 
@@ -105,11 +105,11 @@ async def test_complete_certificate_flow_simulation():
 
     # 3. Child receives welcome and provisions certificate
     print("\n3. Child certificate provisioning:")
-    child_cert_manager = create_certificate_manager(signing_config=server_policy_config)
+    child_cert_manager = DefaultCertificateManager(signing=server_policy_config)
 
     # Mock the private method on this specific instance
     with patch.object(
-        child_cert_manager, "ensure_non_root_certificate", new_callable=AsyncMock, return_value=True
+        child_cert_manager, "ensure_certificate", new_callable=AsyncMock, return_value=True
     ) as mock_ensure_after_welcome:
         cert_result = await child_cert_manager.on_welcome(welcome_frame=welcome)
         print(f"   ✓ Certificate provisioning result = {cert_result}")
@@ -127,7 +127,7 @@ async def test_complete_certificate_flow_simulation():
             system_id="raw-node-001", instance_id="instance-002", security_settings=raw_key_profile
         )
 
-        raw_cert_manager = create_certificate_manager()
+        raw_cert_manager = DefaultCertificateManager()
         raw_result = await raw_cert_manager.on_welcome(welcome_frame=welcome_raw)
         print(f"   ✓ RAW_KEY bypass result = {raw_result} (should be True without calling provisioner)")
 

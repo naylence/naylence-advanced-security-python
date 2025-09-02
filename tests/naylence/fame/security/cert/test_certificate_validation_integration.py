@@ -22,7 +22,7 @@ def test_certificate_validation_in_key_exchange():
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import ed25519
 
-    from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+    from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
     # Create test CA
     ca_cert_pem, ca_key_pem = create_test_ca()

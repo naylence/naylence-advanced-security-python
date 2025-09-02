@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 End-to-end test for attachment certificate validation.
 
@@ -30,7 +29,7 @@ test_certificate_data_here_for_testing_purposes_only
 
     try:
         # Test the attachment validation functions work as expected
-        from naylence.fame.core import create_resource
+        from naylence.fame.factory import create_resource
         from naylence.fame.security.cert.attachment_cert_validator_factory import (
             AttachmentCertValidatorConfig,
         )
@@ -222,7 +221,7 @@ async def test_node_component_integration():
         # Test that the functions are properly integrated
         print("1. Verifying attachment validation functions exist and are importable...")
 
-        from naylence.fame.core import create_resource
+        from naylence.fame.factory import create_resource
         from naylence.fame.security.cert.attachment_cert_validator_factory import (
             AttachmentCertValidatorConfig,
         )

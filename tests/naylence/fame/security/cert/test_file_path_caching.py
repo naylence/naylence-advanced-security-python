@@ -34,8 +34,10 @@ def test_file_path_caching():
         logicals=["file-cache-logical.test"],
     )
 
-    # Get the CA certificate and create a temporary file
-    ca_cert_pem, ca_key_pem = crypto_provider._get_ca_credentials()
+    # Get the CA certificate and create a temporary file using our helper
+    from tests.test_ca_helpers import get_ca_credentials
+
+    ca_cert_pem, ca_key_pem = get_ca_credentials()
     if not ca_cert_pem:
         print("❌ No CA certificate available - cannot test")
         return
@@ -115,8 +117,25 @@ def test_cache_key_analysis():
         logicals=["analysis-logical.test"],
     )
 
-    ca_cert_pem, _ = crypto_provider._get_ca_credentials()
-    x5c = crypto_provider.node_jwk()["x5c"]
+    # Use our helper to get CA credentials and set up the provider
+    from tests.test_ca_helpers import TestCryptoProviderHelper, get_ca_credentials
+
+    ca_cert_pem, ca_key_pem = get_ca_credentials()
+
+    # Configure the provider with CA credentials
+    setattr(crypto_provider, "_test_ca_cert_pem", ca_cert_pem)
+    setattr(crypto_provider, "_test_ca_key_pem", ca_key_pem)
+
+    # Generate certificate first
+    TestCryptoProviderHelper.ensure_test_certificate(crypto_provider)
+
+    # Now we can analyze the x5c
+    node_jwk = crypto_provider.node_jwk()
+    if "x5c" not in node_jwk:
+        print("No x5c found in node JWK")
+        return
+
+    x5c = node_jwk["x5c"]
 
     # Simulate what happens in different scenarios
     with tempfile.TemporaryDirectory() as temp_dir:

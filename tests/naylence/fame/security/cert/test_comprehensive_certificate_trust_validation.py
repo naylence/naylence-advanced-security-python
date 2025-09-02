@@ -12,7 +12,7 @@ import os
 
 import pytest
 
-from naylence.fame.core import create_resource
+from naylence.fame.factory import create_resource
 from naylence.fame.security.cert.attachment_cert_validator_factory import AttachmentCertValidatorConfig
 from naylence.fame.security.crypto.providers.crypto_provider import get_crypto_provider
 from naylence.fame.security.keys.attachment_key_validator_factory import AttachmentKeyValidatorFactory

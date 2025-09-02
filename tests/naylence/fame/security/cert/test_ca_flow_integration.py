@@ -41,9 +41,9 @@ async def test_root_node_ca_certificate_flow():
         # Ensure certificate manager is created
         if security_manager.certificate_manager is None:
             print("   ⚠️  Certificate manager not created, creating default...")
-            from naylence.fame.security.cert.default_certificate_manager import create_certificate_manager
+            from naylence.fame.security.cert.default_certificate_manager import DefaultCertificateManager
 
-            security_manager.certificate_manager = create_certificate_manager()
+            security_manager.certificate_manager = DefaultCertificateManager()
 
         # Mock the certificate provisioning (called by certificate manager) to avoid actual HTTP calls
         with patch.object(
@@ -120,7 +120,7 @@ async def test_root_node_ca_certificate_flow():
                 needs_x509 = (
                     security_manager.certificate_manager.security_settings.signing_material
                     == SigningMaterial.X509_CHAIN
-                    or security_manager.certificate_manager.signing_config.signing_material
+                    or security_manager.certificate_manager._signing.signing_material
                     == SigningMaterial.X509_CHAIN
                 )
                 if needs_x509:
@@ -132,7 +132,7 @@ async def test_root_node_ca_certificate_flow():
                     )
                     print(
                         f"   Signing config: {
-                            security_manager.certificate_manager.signing_config.signing_material
+                            security_manager.certificate_manager._signing.signing_material
                         }"
                     )
                     print(
@@ -162,7 +162,7 @@ async def test_ca_service_integration():
     print("\n=== Testing CA Service Integration ===\n")
 
     try:
-        from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+        from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
         from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
         from naylence.fame.security.fastapi.ca_signing_router import create_ca_signing_router
 

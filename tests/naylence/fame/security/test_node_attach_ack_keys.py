@@ -10,6 +10,7 @@ def test_node_attach_ack_keys():
 
     # Import required modules
     from naylence.fame.security.crypto.providers.crypto_provider import get_crypto_provider
+    from tests.test_ca_helpers import TestCryptoProviderHelper
 
     # Get the crypto provider and set up node context for certificate generation
     provider = get_crypto_provider()
@@ -20,7 +21,7 @@ def test_node_attach_ack_keys():
     )
 
     # Provision certificate via CA service for test compatibility
-    provider._ensure_test_certificate()
+    TestCryptoProviderHelper.ensure_test_certificate(provider)
 
     # Create a mock NodeAttachFrameHandler to test _get_keys method
     class MockNodeAttachFrameHandler:

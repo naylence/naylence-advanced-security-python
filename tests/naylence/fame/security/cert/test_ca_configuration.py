@@ -5,8 +5,8 @@ import tempfile
 def test_ca_configuration():
     """Test CA configuration with both files and PEM strings."""
 
-    from naylence.fame.security.cert.ca_service import create_test_ca
-    from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
+    from tests.test_ca_helpers import TestCryptoProviderHelper
 
     print("=== Testing CA Configuration Support ===\n")
 
@@ -16,15 +16,17 @@ def test_ca_configuration():
     # Test 1: CA configuration via PEM strings
     print("1. Testing CA configuration via PEM strings...")
 
-    crypto_pem = DefaultCryptoProvider.with_ca_pems(ca_cert_pem=ca_cert_pem, ca_key_pem=ca_key_pem)
+    crypto_pem = TestCryptoProviderHelper.create_crypto_provider_with_ca_pems(
+        ca_cert_pem=ca_cert_pem, ca_key_pem=ca_key_pem
+    )
 
     # Set node context to trigger certificate generation
     crypto_pem.set_node_context(
         node_id="test-node-pem", physical_path="/test/pem-path", logicals=["pem-logical.test"]
     )
 
-    # Provision certificate via CA service for test compatibility
-    crypto_pem._ensure_test_certificate()
+    # Generate certificate using helper
+    TestCryptoProviderHelper.ensure_test_certificate(crypto_pem)
 
     pem_cert = crypto_pem.node_certificate_pem()
     assert pem_cert is not None, "Should generate certificate with PEM CA"
@@ -43,7 +45,7 @@ def test_ca_configuration():
         key_file_path = key_file.name
 
     try:
-        crypto_file = DefaultCryptoProvider.with_ca_files(
+        crypto_file = TestCryptoProviderHelper.create_crypto_provider_with_ca_files(
             ca_cert_file=cert_file_path, ca_key_file=key_file_path
         )
 
@@ -52,8 +54,8 @@ def test_ca_configuration():
             node_id="test-node-file", physical_path="/test/file-path", logicals=["file-logical.test"]
         )
 
-        # Provision certificate via CA service for test compatibility
-        crypto_file._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(crypto_file)
 
         file_cert = crypto_file.node_certificate_pem()
         assert file_cert is not None, "Should generate certificate with file CA"
@@ -67,7 +69,7 @@ def test_ca_configuration():
     # Test 3: Fallback to shared test CA
     print("\n3. Testing fallback to shared test CA...")
 
-    crypto_default = DefaultCryptoProvider()
+    crypto_default = TestCryptoProviderHelper.create_crypto_provider_with_ca_pems(*create_test_ca())
 
     # Set node context to trigger certificate generation
     crypto_default.set_node_context(
@@ -76,8 +78,8 @@ def test_ca_configuration():
         logicals=["default-logical.test"],
     )
 
-    # Provision certificate via CA service for test compatibility
-    crypto_default._ensure_test_certificate()
+    # Generate certificate using helper
+    TestCryptoProviderHelper.ensure_test_certificate(crypto_default)
 
     default_cert = crypto_default.node_certificate_pem()
     assert default_cert is not None, "Should generate certificate with default CA"

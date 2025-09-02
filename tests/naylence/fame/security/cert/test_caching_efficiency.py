@@ -13,7 +13,7 @@ def test_caching_efficiency():
     print("=== Testing Certificate Validation Caching ===\n")
 
     # Set up environment with CA
-    from naylence.fame.security.cert.ca_service import create_test_ca
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
 
     ca_cert_pem, ca_key_pem = create_test_ca()
 

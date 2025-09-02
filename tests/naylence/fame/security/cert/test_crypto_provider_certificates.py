@@ -3,14 +3,21 @@
 Test script to verify crypto provider certificate functionality.
 """
 
+from naylence.fame.security.cert.internal_ca_service import create_test_ca
 from naylence.fame.security.crypto.providers.crypto_provider import get_crypto_provider
+from tests.test_ca_helpers import TestCryptoProviderHelper
 
 
 def test_certificate_functionality():
     """Test that crypto provider can generate certificates and x5c JWKs."""
 
-    # Get crypto provider instance
+    # Get crypto provider instance and set it up with CA
     provider = get_crypto_provider()
+    ca_cert_pem, ca_key_pem = create_test_ca()
+
+    # Configure the provider with CA credentials
+    setattr(provider, "_test_ca_cert_pem", ca_cert_pem)
+    setattr(provider, "_test_ca_key_pem", ca_key_pem)
 
     print("Testing DefaultCryptoProvider certificate functionality...")
 
@@ -21,8 +28,8 @@ def test_certificate_functionality():
         logicals=["crypto-logical.test"],
     )
 
-    # Provision certificate via CA service for test compatibility
-    provider._ensure_test_certificate()
+    # Generate certificate using helper
+    TestCryptoProviderHelper.ensure_test_certificate(provider)
 
     # Test 1: Check if certificate is generated
     cert_pem = provider.node_certificate_pem()

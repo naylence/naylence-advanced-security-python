@@ -99,5 +99,3 @@ async def test_key_frame_handler_uses_interface():
     assert hasattr(handler._key_manager, "get_keys_for_path")
 
     print("✓ KeyFrameHandler uses KeyManager interface correctly")
-
-

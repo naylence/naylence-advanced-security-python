@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Integration test for DNS hostname notation in certificates and name constraints.
 
@@ -13,7 +12,7 @@ import asyncio
 
 import pytest
 
-from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
 
 @pytest.mark.asyncio
@@ -160,7 +159,7 @@ async def test_welcome_service_logical_validation():
                 accept = True
                 assigned_path = "/test/node"
                 target_system_id = "test-target"
-                parent_physical_path = "/test"
+                target_physical_path = "/test"
                 expires_at = None
                 metadata = None
 
@@ -173,7 +172,9 @@ async def test_welcome_service_logical_validation():
     class MockTransportProvisioner:
         async def provision(self, placement_result, hello, metadata, token):
             class TransportResult:
-                directive = {"type": "websocket", "url": "ws://test"}
+                connection_grant = {"type": "websocket", "url": "ws://test"}
+                cleanup_handle = None
+                metadata = None
 
             return TransportResult()
 
@@ -228,7 +229,7 @@ async def test_welcome_service_logical_validation():
 async def test_attachment_logical_validation():
     """Test attachment validation with logicals."""
 
-    from naylence.fame.core import create_resource
+    from naylence.fame.factory import create_resource
     from naylence.fame.security.cert.attachment_cert_validator_factory import AttachmentCertValidatorConfig
     from naylence.fame.security.keys.attachment_key_validator_factory import AttachmentKeyValidatorFactory
 

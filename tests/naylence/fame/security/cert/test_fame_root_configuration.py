@@ -69,7 +69,7 @@ class TestRootLogicalAddressScenarios:
         from cryptography.hazmat.primitives.asymmetric import ed25519
         from cryptography.x509.oid import ExtensionOID
 
-        from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+        from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
         with patch.dict(os.environ, {"FAME_ROOT": "company.internal"}):
             # Create test CA

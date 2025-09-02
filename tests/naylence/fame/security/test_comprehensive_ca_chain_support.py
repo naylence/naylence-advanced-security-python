@@ -14,12 +14,12 @@ from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
+from naylence.fame.security.cert.ca_fastapi_router import (
+    CertificateSigningRequest,
+)
+from naylence.fame.security.cert.default_ca_service import DefaultCAService
 from naylence.fame.security.cert.util import public_key_from_x5c
 from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
-from naylence.fame.security.fastapi.ca_signing_router import (
-    CertificateSigningRequest,
-    LocalCASigningService,
-)
 
 
 async def test_ca_service_with_arbitrary_chains():
@@ -32,7 +32,7 @@ async def test_ca_service_with_arbitrary_chains():
     print("\n1️⃣ Testing CA Service with 2-Level Chain")
     print("   📊 Structure: End-Entity → Intermediate → Root CA (trust store)")
 
-    ca_service = LocalCASigningService()
+    ca_service = DefaultCAService()
 
     # Create a test CSR
     private_key = ed25519.Ed25519PrivateKey.generate()

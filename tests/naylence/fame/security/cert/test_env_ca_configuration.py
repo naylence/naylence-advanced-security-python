@@ -11,8 +11,8 @@ import tempfile
 def test_environment_variable_ca_configuration():
     """Test CA configuration via environment variables."""
 
-    from naylence.fame.security.cert.ca_service import create_test_ca
-    from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
+    from tests.test_ca_helpers import TestCryptoProviderHelper
 
     print("=== Testing Environment Variable CA Configuration ===\n")
 
@@ -40,16 +40,18 @@ def test_environment_variable_ca_configuration():
         os.environ["FAME_CA_CERT_FILE"] = cert_file_path
         os.environ["FAME_CA_KEY_FILE"] = key_file_path
 
-        # Create provider without explicit file parameters
-        crypto_env = DefaultCryptoProvider(issuer="env-test.example.com")
+        # Create provider using helper that handles environment CA
+        crypto_env = TestCryptoProviderHelper.create_crypto_provider_with_env_ca(
+            issuer="env-test.example.com"
+        )
 
         # Set node context to trigger certificate generation
         crypto_env.set_node_context(
             node_id="env-test-node", physical_path="/env/test/path", logicals=["logical.test.env"]
         )
 
-        # Provision certificate via CA service for test compatibility
-        crypto_env._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(crypto_env)
 
         env_cert = crypto_env.node_certificate_pem()
         assert env_cert is not None, "Should generate certificate with environment CA"
@@ -75,7 +77,7 @@ def test_environment_variable_ca_configuration():
 
         try:
             # Create provider with explicit file parameters (should override env vars)
-            crypto_override = DefaultCryptoProvider.with_ca_files(
+            crypto_override = TestCryptoProviderHelper.create_crypto_provider_with_ca_files(
                 ca_cert_file=cert_file_path2, ca_key_file=key_file_path2, issuer="override-test.example.com"
             )
 
@@ -86,8 +88,8 @@ def test_environment_variable_ca_configuration():
                 logicals=["logical.test.override"],
             )
 
-            # Provision certificate via CA service for test compatibility
-            crypto_override._ensure_test_certificate()
+            # Generate certificate using helper
+            TestCryptoProviderHelper.ensure_test_certificate(crypto_override)
 
             override_cert = crypto_override.node_certificate_pem()
             assert override_cert is not None, "Should generate certificate with override CA"
@@ -111,8 +113,10 @@ def test_environment_variable_ca_configuration():
         os.environ["FAME_CA_CERT_FILE"] = "/non/existent/cert.pem"
         os.environ["FAME_CA_KEY_FILE"] = "/non/existent/key.pem"
 
-        # Create provider (should fall back to shared test CA)
-        crypto_fallback = DefaultCryptoProvider(issuer="fallback-test.example.com")
+        # Create provider using helper (should fall back to test CA)
+        crypto_fallback = TestCryptoProviderHelper.create_crypto_provider_with_env_ca(
+            issuer="fallback-test.example.com"
+        )
 
         # Set node context to trigger certificate generation
         crypto_fallback.set_node_context(
@@ -121,8 +125,8 @@ def test_environment_variable_ca_configuration():
             logicals=["logical.test.fallback"],
         )
 
-        # Provision certificate via CA service for test compatibility
-        crypto_fallback._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(crypto_fallback)
 
         fallback_cert = crypto_fallback.node_certificate_pem()
         assert fallback_cert is not None, "Should generate certificate with fallback CA"
@@ -137,8 +141,10 @@ def test_environment_variable_ca_configuration():
         if "FAME_CA_KEY_FILE" in os.environ:
             del os.environ["FAME_CA_KEY_FILE"]
 
-        # Create provider (should fall back to shared test CA)
-        crypto_partial = DefaultCryptoProvider(issuer="partial-test.example.com")
+        # Create provider using helper (should fall back to test CA)
+        crypto_partial = TestCryptoProviderHelper.create_crypto_provider_with_env_ca(
+            issuer="partial-test.example.com"
+        )
 
         # Set node context to trigger certificate generation
         crypto_partial.set_node_context(
@@ -147,8 +153,8 @@ def test_environment_variable_ca_configuration():
             logicals=["logical.test.partial"],
         )
 
-        # Provision certificate via CA service for test compatibility
-        crypto_partial._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(crypto_partial)
 
         partial_cert = crypto_partial.node_certificate_pem()
         assert partial_cert is not None, "Should generate certificate with fallback CA"
@@ -162,8 +168,10 @@ def test_environment_variable_ca_configuration():
         os.environ["FAME_CA_CERT_FILE"] = ""
         os.environ["FAME_CA_KEY_FILE"] = ""
 
-        # Create provider (should fall back to shared test CA)
-        crypto_empty = DefaultCryptoProvider(issuer="empty-test.example.com")
+        # Create provider using helper (should fall back to test CA)
+        crypto_empty = TestCryptoProviderHelper.create_crypto_provider_with_env_ca(
+            issuer="empty-test.example.com"
+        )
 
         # Set node context to trigger certificate generation
         crypto_empty.set_node_context(
@@ -172,8 +180,8 @@ def test_environment_variable_ca_configuration():
             logicals=["logical.test.empty"],
         )
 
-        # Provision certificate via CA service for test compatibility
-        crypto_empty._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(crypto_empty)
 
         empty_cert = crypto_empty.node_certificate_pem()
         assert empty_cert is not None, "Should generate certificate with fallback CA"

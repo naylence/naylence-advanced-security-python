@@ -32,7 +32,7 @@ class EncryptionManagerFactoryRegistry:
             return  # Avoid duplicate discovery
 
         try:
-            from naylence.fame.core.util.extension_manager import ExtensionManager
+            from naylence.fame.factory import ExtensionManager
 
             # First, ensure an ExtensionManager exists for our group
             # This will load and cache all EncryptionManagerFactory extensions

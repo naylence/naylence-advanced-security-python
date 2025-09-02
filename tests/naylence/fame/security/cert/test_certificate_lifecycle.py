@@ -52,7 +52,7 @@ def test_certificate_lifecycle():
     # For testing, create a simple test certificate and store it
     # In real scenarios, this would come from the CA service
     try:
-        from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+        from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
         # Create test CA and sign certificate
         root_cert_pem, root_key_pem = create_test_ca()
@@ -169,7 +169,7 @@ def test_direct_attach_scenario():
 
     # 3. Since self-signing is removed, manually provision certificate via CA service
     print("\n3. Provisioning certificate via CA service...")
-    from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+    from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
     # Create CA service for testing
     ca_cert_pem, ca_key_pem = create_test_ca()
@@ -235,7 +235,7 @@ def test_certificate_lifecycle_with_multiple_providers():
 
     # 3. Provision certificates via CA service
     print("\n3. Provisioning certificates via CA service...")
-    from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+    from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
     from naylence.fame.util.util import secure_digest
 
     # Create shared CA service for testing

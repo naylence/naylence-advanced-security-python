@@ -14,8 +14,8 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(m
 def test_enhanced_debugging():
     """Test the enhanced debugging features."""
 
-    from naylence.fame.security.cert.ca_service import create_test_ca
-    from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
+    from tests.test_ca_helpers import TestCryptoProviderHelper
 
     print("=== Testing Enhanced Certificate Debugging ===\n")
 
@@ -39,7 +39,9 @@ def test_enhanced_debugging():
         os.environ["FAME_CA_KEY_FILE"] = key_file_path
 
         # Create provider - this should show CA debug info
-        crypto = DefaultCryptoProvider(issuer="debug-test.example.com", algorithm="EdDSA")
+        crypto = TestCryptoProviderHelper.create_crypto_provider_with_ca_pems(
+            ca_cert_pem, ca_key_pem, issuer="debug-test.example.com", algorithm="EdDSA"
+        )
 
         print("\n2. Setting node context to generate certificate...")
 
@@ -50,11 +52,15 @@ def test_enhanced_debugging():
             logicals=["service.test.debug", "api.test.debug"],
         )
 
-        # Provision certificate via CA service for test compatibility
-        crypto._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(crypto)
 
         cert = crypto.node_certificate_pem()
-        print(f"\n3. Certificate generated successfully (length: {len(cert)} bytes)")
+        if cert:
+            print(f"\n3. Certificate generated successfully (length: {len(cert)} bytes)")
+        else:
+            print("\n3. Certificate generation failed")
+            assert False, "Certificate generation failed"
 
         print("\n4. Testing certificate validation with enhanced debugging...")
 

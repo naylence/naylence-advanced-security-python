@@ -119,10 +119,10 @@ BQYDK2VwA0EAkUz8w4jO2E7I5oP9oGWKn4j7U8mOkR0f5N3zE1yBhBQoGVlQ7sEL
 
     # Create a certificate manager to test certificate provisioning
     security_settings = SecuritySettings(signing_material=SigningMaterial.X509_CHAIN)
-    cert_manager = DefaultCertificateManager(security_settings)
+    cert_manager = DefaultCertificateManager(security_settings=security_settings)
 
     # Mock the certificate client to avoid HTTP calls
-    with patch("naylence.fame.security.cert.default_certificate_manager.CertificateClient") as mock_client:
+    with patch("naylence.fame.security.cert.default_certificate_manager.CAServiceClient") as mock_client:
         mock_client.return_value.__aenter__.return_value.request_certificate.return_value = (
             test_cert_pem,
             test_cert_pem,  # chain same as cert for test

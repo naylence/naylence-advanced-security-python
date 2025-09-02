@@ -71,7 +71,7 @@ class TestCertificateIntegration:
         from cryptography.hazmat.primitives import serialization
         from cryptography.hazmat.primitives.asymmetric import ed25519
 
-        from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+        from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
         # Create test certificate
         root_cert_pem, root_key_pem = create_test_ca()
@@ -124,7 +124,7 @@ class TestCertificateIntegration:
         from cryptography.hazmat.primitives import serialization
         from cryptography.hazmat.primitives.asymmetric import ed25519
 
-        from naylence.fame.security.cert.ca_service import CASigningService, create_test_ca
+        from naylence.fame.security.cert.internal_ca_service import CASigningService, create_test_ca
 
         # Create test certificate
         root_cert_pem, root_key_pem = create_test_ca()

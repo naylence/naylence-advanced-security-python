@@ -46,12 +46,12 @@ async def test_intermediate_ca_setup():
     try:
         from cryptography import x509
 
-        from naylence.fame.fastapi.ca_signing_router import CertificateSigningRequest, LocalCASigningService
+        from naylence.fame.fastapi.ca_signing_router import CertificateSigningRequest, DefaultCAService
         from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
 
         # Step 1: Create CA service (will load from environment)
         print("1️⃣ Creating CA Signing Service...")
-        ca_service = LocalCASigningService()
+        ca_service = DefaultCAService()
         print("   ✅ Service created - will use intermediate chain for signing")
 
         # Step 2: Create a test CSR

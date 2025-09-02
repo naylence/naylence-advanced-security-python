@@ -11,8 +11,8 @@ def test_certificate_integration():
     import os
     import tempfile
 
-    from naylence.fame.security.cert.ca_service import create_test_ca
-    from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
+    from tests.test_ca_helpers import TestCryptoProviderHelper
 
     # Set up CA environment for testing
     ca_cert_pem, ca_key_pem = create_test_ca()
@@ -32,16 +32,16 @@ def test_certificate_integration():
         os.environ["FAME_CA_CERT_FILE"] = ca_cert_path
         os.environ["FAME_CA_KEY_FILE"] = ca_key_path
 
-        # Create crypto provider and set node context
-        provider = DefaultCryptoProvider()
+        # Create crypto provider using helper
+        provider = TestCryptoProviderHelper.create_crypto_provider_with_ca_pems(ca_cert_pem, ca_key_pem)
         provider.set_node_context(
             node_id="test-integration-node",
             physical_path="/test/integration/path",
             logicals=["service.integration.test"],
         )
 
-        # Provision certificate via CA service for test compatibility
-        provider._ensure_test_certificate()
+        # Generate certificate using helper
+        TestCryptoProviderHelper.ensure_test_certificate(provider)
 
         # Test 1: Basic certificate functionality
         print("\n1. Testing basic certificate functionality...")
@@ -220,8 +220,8 @@ def test_multi_node_ca_sharing():
     import os
     import tempfile
 
-    from naylence.fame.security.cert.ca_service import create_test_ca
-    from naylence.fame.security.crypto.providers.default_crypto_provider import DefaultCryptoProvider
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
+    from tests.test_ca_helpers import TestCryptoProviderHelper
 
     # Set up CA environment for testing
     ca_cert_pem, ca_key_pem = create_test_ca()
@@ -244,14 +244,14 @@ def test_multi_node_ca_sharing():
         # Create multiple providers (simulating multiple nodes)
         providers = []
         for i in range(3):
-            provider = DefaultCryptoProvider()
+            provider = TestCryptoProviderHelper.create_crypto_provider_with_ca_pems(ca_cert_pem, ca_key_pem)
             provider.set_node_context(
                 node_id=f"test-multi-node-{i}",
                 physical_path=f"/test/multi/path/{i}",
                 logicals=[f"node-{i}.service.multi.test"],
             )
-            # Provision certificate via CA service for test compatibility
-            provider._ensure_test_certificate()
+            # Generate certificate using helper
+            TestCryptoProviderHelper.ensure_test_certificate(provider)
             providers.append(provider)
 
         # Extract certificates

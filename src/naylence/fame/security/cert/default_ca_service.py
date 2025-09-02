@@ -1,56 +1,13 @@
-"""
-FastAPI router for Certificate Authority signing service.
-
-Provides HTTP endpoints for Certificate Signing Requests (CSR) and certificate issuance.
-Designed to be pluggable with different CA backends (local OpenSSL, Vault, AWS PCA, etc.).
-"""
-
-from __future__ import annotations
-
 import os
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
 
-from pydantic import BaseModel, Field
-
-from naylence.fame.util.logging import getLogger
-
-if TYPE_CHECKING:
-    from fastapi import APIRouter
-
-logger = getLogger(__name__)
-
-DEFAULT_PREFIX = "/fame/v1/ca"
+from naylence.fame.security.auth.authorizer import Authorizer  # Add this import (adjust path if needed)
+from naylence.fame.security.cert.ca_fastapi_router import logger
+from naylence.fame.security.cert.ca_service import CAService
+from naylence.fame.security.cert.fastapi_model import CertificateIssuanceResponse, CertificateSigningRequest
 
 
-class CertificateSigningRequest(BaseModel):
-    """Certificate Signing Request payload."""
-
-    csr_pem: str = Field(..., description="Certificate Signing Request in PEM format")
-    requester_id: str = Field(..., description="ID of the node requesting the certificate")
-    physical_path: Optional[str] = Field(None, description="Physical path for the node")
-    logicals: Optional[List[str]] = Field(
-        default_factory=list,
-        description="Host-like logical addresses the node will serve",
-    )
-
-
-class CertificateIssuanceResponse(BaseModel):
-    """Certificate issuance response."""
-
-    certificate_pem: str = Field(..., description="Issued certificate in PEM format")
-    certificate_chain_pem: Optional[str] = Field(None, description="Full certificate chain in PEM format")
-    expires_at: str = Field(..., description="Certificate expiration time in ISO format")
-
-
-class CASigningService:
-    """Abstract CA signing service interface."""
-
-    async def issue_certificate(self, csr: CertificateSigningRequest) -> CertificateIssuanceResponse:
-        """Issue a certificate from a CSR."""
-        raise NotImplementedError
-
-
-class LocalCASigningService(CASigningService):
+class DefaultCAService(CAService):
     """Local CA signing service using the existing ca_service module."""
 
     def __init__(
@@ -60,6 +17,7 @@ class LocalCASigningService(CASigningService):
         intermediate_chain_pem: Optional[str] = None,
         signing_cert_pem: Optional[str] = None,
         signing_key_pem: Optional[str] = None,
+        authorizer: Optional[Authorizer] = None,
     ):
         """
         Initialize the CA signing service.
@@ -76,6 +34,11 @@ class LocalCASigningService(CASigningService):
         self._intermediate_chain_pem = intermediate_chain_pem
         self._signing_cert_pem = signing_cert_pem
         self._signing_key_pem = signing_key_pem
+        self._authorizer = authorizer
+
+    @property
+    def authorizer(self) -> Optional[Authorizer]:
+        return self._authorizer
 
     def _get_ca_credentials(
         self,
@@ -138,7 +101,7 @@ class LocalCASigningService(CASigningService):
 
         # Fallback to test CA if nothing configured
         if not ca_cert_pem or not ca_key_pem:
-            from naylence.fame.security.cert.ca_service import create_test_ca
+            from naylence.fame.security.cert.internal_ca_service import create_test_ca
 
             logger.warning("No CA credentials configured, using test CA (not for production!)")
             root_cert, root_key = create_test_ca()
@@ -192,7 +155,7 @@ class LocalCASigningService(CASigningService):
         from cryptography import x509
         from cryptography.hazmat.primitives import serialization
 
-        from naylence.fame.security.cert.ca_service import (
+        from naylence.fame.security.cert.internal_ca_service import (
             CASigningService as InternalCAService,
         )
         from naylence.fame.util.util import secure_digest
@@ -357,44 +320,3 @@ class LocalCASigningService(CASigningService):
                 exc_info=True,
             )
             raise
-
-
-def create_ca_signing_router(
-    *, ca_service: Optional[CASigningService] = None, prefix: str = DEFAULT_PREFIX
-) -> APIRouter:
-    """Create FastAPI router for CA signing service."""
-    from fastapi import APIRouter, HTTPException
-
-    router = APIRouter(prefix=prefix, tags=["Certificate Authority"])
-
-    # Use default local CA service if none provided
-    if ca_service is None:
-        ca_service = LocalCASigningService()
-
-    @router.post("/sign", response_model=CertificateIssuanceResponse)
-    async def sign_certificate(csr_request: CertificateSigningRequest):
-        """
-        Sign a Certificate Signing Request (CSR) and return the issued certificate.
-
-        This endpoint accepts a CSR in PEM format along with node metadata and returns
-        a signed certificate. The certificate will be short-lived (24 hours) and include
-        the node's physical and logicals in the Subject Alternative Names extension.
-        """
-        try:
-            result = await ca_service.issue_certificate(csr_request)
-            return result
-
-        except ValueError as e:
-            logger.warning("invalid_csr_request", error=str(e))
-            raise HTTPException(status_code=400, detail=f"Invalid CSR: {e}")
-
-        except Exception as e:
-            logger.error("certificate_signing_error", error=str(e), exc_info=True)
-            raise HTTPException(status_code=500, detail="Certificate signing failed")
-
-    @router.get("/health")
-    async def health_check():
-        """Health check endpoint for the CA service."""
-        return {"status": "healthy", "service": "ca-signing"}
-
-    return router

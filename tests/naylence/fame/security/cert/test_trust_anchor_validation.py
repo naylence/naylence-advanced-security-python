@@ -13,7 +13,7 @@ def test_trust_anchor_validation():
     print("=== Testing Trust Anchor Validation ===\n")
 
     # Import after the function definition to avoid circular imports
-    from naylence.fame.security.cert.ca_service import create_test_ca
+    from naylence.fame.security.cert.internal_ca_service import create_test_ca
 
     # Create a real test CA
     ca_cert_pem, ca_key_pem = create_test_ca()
