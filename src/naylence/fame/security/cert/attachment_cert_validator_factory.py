@@ -32,6 +32,8 @@ class AttachmentCertValidatorFactory(AttachmentKeyValidatorFactory[AttachmentCer
     """Factory for creating certificate-based attachment key validators."""
 
     type = "AttachmentCertValidator"
+    is_default: bool = True
+    priority: int = 100
 
     async def create(
         self, config: Optional[Union[AttachmentCertValidatorConfig, Dict[str, Any]]] = None, **kwargs

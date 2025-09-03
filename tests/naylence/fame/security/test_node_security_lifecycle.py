@@ -157,11 +157,15 @@ class TestCompleteNodeLifecycle:
         mock_verifier = MagicMock()
         mock_verifier.verify_envelope = MagicMock()
 
+        # Create mock key validator
+        mock_key_validator = MagicMock()
+
         manager = DefaultSecurityManager(
             policy=security_policy,
             key_manager=mock_key_manager,
             certificate_manager=mock_certificate_manager,
             envelope_verifier=mock_verifier,
+            key_validator=mock_key_validator,
         )
 
         # Phase 1: Node initialization

@@ -219,7 +219,10 @@ async def test_encryption_key_discovery_flow():
         key_manager.has_key = AsyncMock(side_effect=lambda kid: kid == target_keys[0]["kid"])
         key_manager.add_keys = AsyncMock()
 
-        key_mgmt_handler = KeyManagementHandler(node_like, key_manager)  # type: ignore
+        # Create mock key validator
+        mock_key_validator = Mock()
+
+        key_mgmt_handler = KeyManagementHandler(node_like, key_manager, mock_key_validator)  # type: ignore
 
         # Mock encryption manager
         encryption_manager = Mock(spec=EncryptionManager)

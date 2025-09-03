@@ -9,13 +9,16 @@ At its core, Naylence already provides a zero-trust, message-oriented backbone f
 ## Key Features
 
 * **Overlay end-to-end encryption (E2EE) & Sealed Channels**
+  
   Adds an additional cryptographic layer on top of channel security. Messages remain encrypted and authenticated across multi-hop routes, even if intermediate sentinels or transport layers are compromised.
 
 * **Envelope Signing & Identity Assurance**
+  
   Supports both **key-based signing** and **X.509/SPIFFE-style identities**, ensuring every envelope is verifiable to its origin. This enables tamper-resistant audit trails and fine-grained access control.
 
 * **Security Profiles**
-  Predefined profiles (`open`, `perimeter`, `standard`, `strict-overlay`) encapsulate best-practice combinations of authentication, encryption, and authorization. Developers can choose the right trade-off between ease of use and maximum assurance.
+  
+  Predefined profiles (`open`, `gated`, `overlay`, `strict-overlay`) encapsulate best-practice combinations of authentication, encryption, and authorization. Developers can choose the right trade-off between ease of use and maximum assurance.
 
 * **Secure Sticky Sessions**
   Provides cryptographically bound sticky sessions, ensuring that long-running agent conversations remain secure and bound to the original security context without risk of session hijacking.
@@ -48,4 +51,4 @@ Naylence Advanced Security addresses these challenges by ensuring that **securit
 
 ## License
 
-Business Source License (BSL). See `LICENSE` for full terms.
+[Business Source License (BSL)](./LICENSE). See the LICENSE file for full terms.

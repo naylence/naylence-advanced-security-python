@@ -192,12 +192,18 @@ def enhanced_key_manager():
     return MockKeyManager()
 
 
+@pytest.fixture
+def mock_key_validator():
+    """Create a mock key validator."""
+    return MagicMock()
+
+
 class TestAdvancedNodeLifecycle:
     """Test advanced node lifecycle scenarios with full component integration."""
 
     @pytest.mark.asyncio
     async def test_sentinel_node_startup_with_key_frame_handler(
-        self, advanced_sentinel_node, enhanced_key_manager, security_policy
+        self, advanced_sentinel_node, enhanced_key_manager, security_policy, mock_key_validator
     ):
         """Test sentinel node startup that creates KeyFrameHandler."""
 
@@ -206,10 +212,11 @@ class TestAdvancedNodeLifecycle:
         mock_verifier.verify_envelope = MagicMock()
 
         manager = DefaultSecurityManager(
-            policy=security_policy, key_manager=enhanced_key_manager, envelope_verifier=mock_verifier
-        )
-
-        # Initialize and start - should create KeyFrameHandler for sentinel
+            policy=security_policy,
+            key_manager=enhanced_key_manager,
+            envelope_verifier=mock_verifier,
+            key_validator=mock_key_validator,
+        )  # Initialize and start - should create KeyFrameHandler for sentinel
         await manager.on_node_initialized(advanced_sentinel_node)
 
         # Patch isinstance to make the node appear as RoutingNodeLike
@@ -240,11 +247,13 @@ class TestAdvancedNodeLifecycle:
 
     @pytest.mark.asyncio
     async def test_node_startup_with_encryption_manager(
-        self, advanced_child_node, mock_encryption_manager, security_policy
+        self, advanced_child_node, mock_encryption_manager, security_policy, mock_key_validator
     ):
         """Test node startup with encryption manager that implements NodeEventListener."""
 
-        manager = DefaultSecurityManager(policy=security_policy, encryption=mock_encryption_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, encryption=mock_encryption_manager, key_validator=mock_key_validator
+        )
 
         await manager.on_node_initialized(advanced_child_node)
         await manager.on_node_started(advanced_child_node)
@@ -255,12 +264,20 @@ class TestAdvancedNodeLifecycle:
 
     @pytest.mark.asyncio
     async def test_node_attach_to_upstream_with_security_validation(
-        self, advanced_child_node, enhanced_key_manager, mock_encryption_manager, security_policy
+        self,
+        advanced_child_node,
+        enhanced_key_manager,
+        mock_encryption_manager,
+        security_policy,
+        mock_key_validator,
     ):
         """Test upstream attachment with security validation."""
 
         manager = DefaultSecurityManager(
-            policy=security_policy, key_manager=enhanced_key_manager, encryption=mock_encryption_manager
+            policy=security_policy,
+            key_manager=enhanced_key_manager,
+            encryption=mock_encryption_manager,
+            key_validator=mock_key_validator,
         )
 
         # Attach to upstream with parent keys
@@ -284,11 +301,13 @@ class TestAdvancedNodeLifecycle:
 
     @pytest.mark.asyncio
     async def test_node_attach_to_upstream_without_parent_keys(
-        self, advanced_child_node, enhanced_key_manager, security_policy
+        self, advanced_child_node, enhanced_key_manager, security_policy, mock_key_validator
     ):
         """Test upstream attachment without parent keys."""
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=enhanced_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=enhanced_key_manager, key_validator=mock_key_validator
+        )
 
         # Attach without parent keys
         attach_info = {
@@ -304,12 +323,20 @@ class TestAdvancedNodeLifecycle:
 
     @pytest.mark.asyncio
     async def test_attach_to_peer_integration(
-        self, advanced_sentinel_node, enhanced_key_manager, mock_encryption_manager, security_policy
+        self,
+        advanced_sentinel_node,
+        enhanced_key_manager,
+        mock_encryption_manager,
+        security_policy,
+        mock_key_validator,
     ):
         """Test peer attachment integration."""
 
         manager = DefaultSecurityManager(
-            policy=security_policy, key_manager=enhanced_key_manager, encryption=mock_encryption_manager
+            policy=security_policy,
+            key_manager=enhanced_key_manager,
+            encryption=mock_encryption_manager,
+            key_validator=mock_key_validator,
         )
 
         # Mock connector
@@ -339,10 +366,12 @@ class TestEnvelopeProcessingAdvanced:
     """Test advanced envelope processing scenarios."""
 
     @pytest.mark.asyncio
-    async def test_deliver_local_with_channel_decryption(self, advanced_child_node, security_policy):
+    async def test_deliver_local_with_channel_decryption(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test local delivery with channel decryption."""
 
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
 
         # Start node to create channel manager
         await manager.on_node_started(advanced_child_node)
@@ -372,10 +401,12 @@ class TestEnvelopeProcessingAdvanced:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_deliver_local_with_system_frames(self, advanced_child_node, security_policy):
+    async def test_deliver_local_with_system_frames(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test local delivery with various system frames."""
 
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
         await manager.on_node_initialized(advanced_child_node)
         await manager.on_node_started(advanced_child_node)
 
@@ -422,11 +453,13 @@ class TestEnvelopeProcessingAdvanced:
 
     @pytest.mark.asyncio
     async def test_deliver_with_key_management_handler(
-        self, advanced_child_node, enhanced_key_manager, security_policy
+        self, advanced_child_node, enhanced_key_manager, security_policy, mock_key_validator
     ):
         """Test envelope delivery with key management handler."""
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=enhanced_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=enhanced_key_manager, key_validator=mock_key_validator
+        )
 
         await manager.on_node_started(advanced_child_node)
 
@@ -460,7 +493,9 @@ class TestSecurityPolicyValidation:
     """Test security policy validation and enforcement."""
 
     @pytest.mark.asyncio
-    async def test_crypto_level_policy_enforcement(self, advanced_child_node, security_policy):
+    async def test_crypto_level_policy_enforcement(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test crypto level policy enforcement."""
 
         # Mock policy with strict requirements
@@ -473,7 +508,7 @@ class TestSecurityPolicyValidation:
         security_policy.classify_message_crypto_level.return_value = CryptoLevel.PLAINTEXT
         security_policy.get_inbound_violation_action.return_value = SecurityAction.REJECT
 
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
         await manager.on_node_started(advanced_child_node)
 
         # Create non-system frame that would violate policy
@@ -488,7 +523,9 @@ class TestSecurityPolicyValidation:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_signature_verification_policy(self, advanced_child_node, security_policy):
+    async def test_signature_verification_policy(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test signature verification policy enforcement."""
 
         # Create verifier that succeeds
@@ -504,7 +541,9 @@ class TestSecurityPolicyValidation:
 
         security_policy.get_unsigned_violation_action.return_value = SecurityAction.REJECT
 
-        manager = DefaultSecurityManager(policy=security_policy, envelope_verifier=mock_verifier)
+        manager = DefaultSecurityManager(
+            policy=security_policy, envelope_verifier=mock_verifier, key_validator=mock_key_validator
+        )
         await manager.on_node_started(advanced_child_node)
 
         # Create unsigned frame
@@ -524,11 +563,11 @@ class TestForwardingScenarios:
 
     @pytest.mark.asyncio
     async def test_forward_to_route_with_critical_frame_signing(
-        self, advanced_sentinel_node, security_policy
+        self, advanced_sentinel_node, security_policy, mock_key_validator
     ):
         """Test forwarding critical frames with signing requirements."""
 
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
 
         # Create unsigned critical frame
         frame = KeyRequestFrame(address=FameAddress("target@/node"), kid="requested-key")
@@ -546,11 +585,13 @@ class TestForwardingScenarios:
 
     @pytest.mark.asyncio
     async def test_forward_with_envelope_security_handler(
-        self, advanced_child_node, enhanced_key_manager, security_policy
+        self, advanced_child_node, enhanced_key_manager, security_policy, mock_key_validator
     ):
         """Test forwarding with envelope security handler."""
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=enhanced_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=enhanced_key_manager, key_validator=mock_key_validator
+        )
 
         await manager.on_node_started(advanced_child_node)
 
@@ -585,10 +626,12 @@ class TestErrorScenarios:
     """Test various error scenarios and edge cases."""
 
     @pytest.mark.asyncio
-    async def test_send_nack_with_heartbeat_frame(self, advanced_child_node, security_policy):
+    async def test_send_nack_with_heartbeat_frame(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test NACK sending assertion with NodeHeartbeatFrame."""
 
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
 
         # Create NodeHeartbeatFrame (should trigger assertion)
         frame = NodeHeartbeatFrame()
@@ -599,21 +642,25 @@ class TestErrorScenarios:
             await manager._send_nack(advanced_child_node, envelope, "test_reason")
 
     @pytest.mark.asyncio
-    async def test_epoch_change_without_key_manager(self, advanced_child_node, security_policy):
+    async def test_epoch_change_without_key_manager(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test epoch change handling without key manager."""
 
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
 
         # Should not raise any exceptions
         await manager.on_epoch_change(advanced_child_node, "new-epoch")
 
     @pytest.mark.asyncio
     async def test_epoch_change_with_key_manager(
-        self, advanced_child_node, enhanced_key_manager, security_policy
+        self, advanced_child_node, enhanced_key_manager, security_policy, mock_key_validator
     ):
         """Test epoch change handling with key manager."""
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=enhanced_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=enhanced_key_manager, key_validator=mock_key_validator
+        )
 
         await manager.on_epoch_change(advanced_child_node, "new-epoch")
 
@@ -625,14 +672,18 @@ class TestCertificateManagement:
     """Test certificate management scenarios."""
 
     @pytest.mark.asyncio
-    async def test_child_welcome_with_certificate_manager(self, advanced_child_node, security_policy):
+    async def test_child_welcome_with_certificate_manager(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test child welcome handling with certificate manager."""
 
         # Create mock certificate manager
         mock_cert_manager = MagicMock()
         mock_cert_manager.on_welcome = AsyncMock()
 
-        manager = DefaultSecurityManager(policy=security_policy, certificate_manager=mock_cert_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, certificate_manager=mock_cert_manager, key_validator=mock_key_validator
+        )
 
         welcome_frame = NodeWelcomeFrame(
             system_id="child-node", instance_id="child-instance-123", assigned_path="/child/path"
@@ -644,7 +695,9 @@ class TestCertificateManagement:
         mock_cert_manager.on_welcome.assert_called_once_with(welcome_frame=welcome_frame)
 
     @pytest.mark.asyncio
-    async def test_child_welcome_certificate_validation_failure(self, advanced_child_node, security_policy):
+    async def test_child_welcome_certificate_validation_failure(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test child welcome with certificate validation failure."""
 
         # Create certificate manager that fails with validation error
@@ -653,7 +706,9 @@ class TestCertificateManagement:
             side_effect=RuntimeError("certificate validation failed: invalid cert")
         )
 
-        manager = DefaultSecurityManager(policy=security_policy, certificate_manager=mock_cert_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, certificate_manager=mock_cert_manager, key_validator=mock_key_validator
+        )
 
         welcome_frame = NodeWelcomeFrame(
             system_id="child-node", instance_id="child-instance-456", assigned_path="/child/path"
@@ -664,14 +719,18 @@ class TestCertificateManagement:
             await manager.on_welcome(welcome_frame)
 
     @pytest.mark.asyncio
-    async def test_child_welcome_general_certificate_error(self, advanced_child_node, security_policy):
+    async def test_child_welcome_general_certificate_error(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test child welcome with general certificate error."""
 
         # Create certificate manager that fails with general error
         mock_cert_manager = MagicMock()
         mock_cert_manager.on_welcome = AsyncMock(side_effect=Exception("Network error connecting to CA"))
 
-        manager = DefaultSecurityManager(policy=security_policy, certificate_manager=mock_cert_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, certificate_manager=mock_cert_manager, key_validator=mock_key_validator
+        )
 
         welcome_frame = NodeWelcomeFrame(
             system_id="child-node", instance_id="child-instance-789", assigned_path="/child/path"
@@ -688,14 +747,18 @@ class TestHeartbeatHandling:
     """Test heartbeat verification scenarios."""
 
     @pytest.mark.asyncio
-    async def test_heartbeat_with_signature_verification(self, advanced_child_node, security_policy):
+    async def test_heartbeat_with_signature_verification(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test heartbeat with signature verification."""
 
         # Create verifier that succeeds
         mock_verifier = MagicMock()
         mock_verifier.verify_envelope = MagicMock()
 
-        manager = DefaultSecurityManager(policy=security_policy, envelope_verifier=mock_verifier)
+        manager = DefaultSecurityManager(
+            policy=security_policy, envelope_verifier=mock_verifier, key_validator=mock_key_validator
+        )
 
         # Create signed heartbeat
         frame = NodeHeartbeatFrame()
@@ -709,14 +772,18 @@ class TestHeartbeatHandling:
         mock_verifier.verify_envelope.assert_called_once_with(envelope)
 
     @pytest.mark.asyncio
-    async def test_heartbeat_verification_failure(self, advanced_child_node, security_policy):
+    async def test_heartbeat_verification_failure(
+        self, advanced_child_node, security_policy, mock_key_validator
+    ):
         """Test heartbeat verification failure handling."""
 
         # Create verifier that fails
         mock_verifier = MagicMock()
         mock_verifier.verify_envelope = MagicMock(side_effect=ValueError("Invalid signature"))
 
-        manager = DefaultSecurityManager(policy=security_policy, envelope_verifier=mock_verifier)
+        manager = DefaultSecurityManager(
+            policy=security_policy, envelope_verifier=mock_verifier, key_validator=mock_key_validator
+        )
 
         # Create signed heartbeat
         frame = NodeHeartbeatFrame()

@@ -93,17 +93,25 @@ def security_policy():
 
 
 @pytest.fixture
-def basic_security_manager(security_policy, mock_crypto_provider):
+def mock_key_validator():
+    """Create a mock key validator."""
+    return MagicMock()
+
+
+@pytest.fixture
+def basic_security_manager(security_policy, mock_crypto_provider, mock_key_validator):
     """Create a basic security manager with minimal key sharing configuration."""
     # Create mock envelope verifier to enable key sharing functionality
     mock_verifier = MagicMock()
     mock_verifier.verify_envelope = MagicMock()
 
-    return DefaultSecurityManager(policy=security_policy, envelope_verifier=mock_verifier)
+    return DefaultSecurityManager(
+        policy=security_policy, envelope_verifier=mock_verifier, key_validator=mock_key_validator
+    )
 
 
 @pytest.fixture
-def full_security_manager(security_policy, mock_crypto_provider):
+def full_security_manager(security_policy, mock_crypto_provider, mock_key_validator):
     """Create a fully configured security manager."""
     with patch(
         "naylence.fame.security.crypto.providers.crypto_provider.get_crypto_provider",
@@ -115,16 +123,19 @@ def full_security_manager(security_policy, mock_crypto_provider):
         verifier = EdDSAEnvelopeVerifier(key_provider=get_key_provider())
 
         return DefaultSecurityManager(
-            policy=security_policy, envelope_signer=signer, envelope_verifier=verifier
+            policy=security_policy,
+            envelope_signer=signer,
+            envelope_verifier=verifier,
+            key_validator=mock_key_validator,
         )
 
 
 class TestDefaultSecurityManagerBasics:
     """Test basic functionality and initialization."""
 
-    def test_initialization_with_minimal_config(self, security_policy):
+    def test_initialization_with_minimal_config(self, security_policy, mock_key_validator):
         """Test that manager can be initialized with just a policy."""
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
 
         assert manager.policy is security_policy
         assert manager.envelope_signer is None
@@ -171,7 +182,9 @@ class TestNodeLifecycleIntegration:
         assert manager.secure_channel_frame_handler is not None
 
     @pytest.mark.asyncio
-    async def test_node_started_event_with_key_manager(self, security_policy, mock_node):
+    async def test_node_started_event_with_key_manager(
+        self, security_policy, mock_node, mock_key_validator
+    ):
         """Test node started event with key manager."""
         mock_key_manager = AsyncMock()
         mock_key_manager.on_node_started = AsyncMock()
@@ -181,7 +194,10 @@ class TestNodeLifecycleIntegration:
         mock_verifier.verify_envelope = MagicMock()
 
         manager = DefaultSecurityManager(
-            policy=security_policy, key_manager=mock_key_manager, envelope_verifier=mock_verifier
+            policy=security_policy,
+            key_manager=mock_key_manager,
+            envelope_verifier=mock_verifier,
+            key_validator=mock_key_validator,
         )
 
         await manager.on_node_started(mock_node)
@@ -196,12 +212,14 @@ class TestNodeLifecycleIntegration:
         assert manager.envelope_security_handler is not None
 
     @pytest.mark.asyncio
-    async def test_node_stopped_event(self, security_policy, mock_node):
+    async def test_node_stopped_event(self, security_policy, mock_node, mock_key_validator):
         """Test node stopped event handling."""
         mock_key_manager = AsyncMock()
         mock_key_manager.on_node_stopped = AsyncMock()
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=mock_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=mock_key_manager, key_validator=mock_key_validator
+        )
 
         # Simulate starting the node first
         await manager.on_node_started(mock_node)
@@ -213,12 +231,14 @@ class TestNodeLifecycleIntegration:
         mock_key_manager.on_node_stopped.assert_called_once_with(mock_node)
 
     @pytest.mark.asyncio
-    async def test_node_initialized_event(self, security_policy, mock_node):
+    async def test_node_initialized_event(self, security_policy, mock_node, mock_key_validator):
         """Test node initialized event handling."""
         mock_key_manager = AsyncMock()
         mock_key_manager.on_node_initialized = AsyncMock()
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=mock_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=mock_key_manager, key_validator=mock_key_validator
+        )
 
         await manager.on_node_initialized(mock_node)
 
@@ -365,9 +385,9 @@ class TestKeyManagementIntegration:
     """Test key management integration."""
 
     @pytest.mark.asyncio
-    async def test_shareable_keys_no_signer(self, security_policy):
+    async def test_shareable_keys_no_signer(self, security_policy, mock_key_validator):
         """Test shareable keys when no envelope signer is configured."""
-        manager = DefaultSecurityManager(policy=security_policy)
+        manager = DefaultSecurityManager(policy=security_policy, key_validator=mock_key_validator)
 
         keys = manager.get_shareable_keys()
 
@@ -460,12 +480,14 @@ class TestPolicyIntegration:
         assert result is not None or result is None  # Either pass through or reject
 
     @pytest.mark.asyncio
-    async def test_epoch_change_handling(self, security_policy, mock_node):
+    async def test_epoch_change_handling(self, security_policy, mock_node, mock_key_validator):
         """Test epoch change event handling."""
         mock_key_manager = AsyncMock()
         mock_key_manager.announce_keys_to_upstream = AsyncMock()
 
-        manager = DefaultSecurityManager(policy=security_policy, key_manager=mock_key_manager)
+        manager = DefaultSecurityManager(
+            policy=security_policy, key_manager=mock_key_manager, key_validator=mock_key_validator
+        )
 
         await manager.on_epoch_change(mock_node, "new-epoch")
 
