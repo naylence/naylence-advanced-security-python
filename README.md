@@ -1,30 +1,44 @@
 # Naylence Advanced Security
 
-**Naylence Advanced Security** is a high-assurance extension for the [Naylence Agentic Fabric](https://github.com/naylence) that delivers advanced cryptographic and policy-driven protections for multi-agent systems. It is designed for environments where agents, services, and organizations must interact across trust domains while preserving **confidentiality, integrity, durability, and policy compliance**.
+**Naylence Advanced Security** is a high‑assurance extension for the [Naylence Agentic Fabric](https://github.com/naylence) that delivers advanced cryptographic and policy‑driven protections for multi‑agent systems. It is designed for environments where agents, services, and organizations must interact across trust domains while preserving **confidentiality, integrity, durability, and policy compliance**.
 
-At its core, Naylence already provides a zero-trust, message-oriented backbone for federated agents. This package extends that foundation with **overlay security features**, **pluggable security managers**, and **secure sticky sessions** that make the system resilient in complex, federated, and regulated deployments.
+At its core, Naylence already provides a zero‑trust, message‑oriented backbone for federated agents. This package extends that foundation with **sealed overlay encryption**, **SPIFFE/X.509 workload identities**, **secure sticky sessions**, and **secure load balancing** that make the system resilient in complex, federated, and regulated deployments.
 
 ---
 
 ## Key Features
 
-* **Overlay end-to-end encryption (E2EE) & Sealed Channels**
-  
-  Adds an additional cryptographic layer on top of channel security. Messages remain encrypted and authenticated across multi-hop routes, even if intermediate sentinels or transport layers are compromised.
+* **Overlay end‑to‑end encryption (E2EE) & Sealed Channels**
+  Adds a cryptographic layer on top of transport (TLS). Messages remain encrypted and authenticated **across multiple hops**, even if intermediate sentinels or networks are compromised.
 
 * **Envelope Signing & Identity Assurance**
-  
-  Supports both **key-based signing** and **X.509/SPIFFE-style identities**, ensuring every envelope is verifiable to its origin. This enables tamper-resistant audit trails and fine-grained access control.
+  Uses **X.509/SPIFFE‑style identities (SVIDs)** so every envelope is verifiable to its origin—enabling tamper‑resistant audit trails and fine‑grained policy.
 
-* **Security Profiles**
-  
-  Predefined profiles (`open`, `gated`, `overlay`, `strict-overlay`) encapsulate best-practice combinations of authentication, encryption, and authorization. Developers can choose the right trade-off between ease of use and maximum assurance.
+* **Secure Sticky Sessions & Load Balancing**
+  Cryptographically binds long‑running conversations to the initiating security context, and enables **identity‑aware load balancing** without sacrificing end‑to‑end protections.
 
-* **Secure Sticky Sessions**
-  Provides cryptographically bound sticky sessions, ensuring that long-running agent conversations remain secure and bound to the original security context without risk of session hijacking.
+* **Durable Cross‑Domain Trust**
+  Enables secure federation across orgs or clouds, where \*\*policies—not perimeter assumptions—\*\*determine who can talk to whom.
 
-* **Durable Cross-Domain Trust**
-  Enables secure federation across organizations or cloud providers, with guarantees that **policies, not perimeter assumptions**, determine who can talk to whom.
+---
+
+## Security Profiles
+
+The OSS **`naylence-runtime`** package ships the following profiles **out of the box**:
+
+* **`open`** – minimal controls for local/dev.
+* **`gated`** – OAuth2/JWT‑gated admission (authn/authz at the edge).
+* **`overlay`** – message **signing** for provenance and tamper‑evidence.
+
+This **Advanced Security** package **enables and implements**:
+
+* **`strict-overlay`** – maximum assurance profile combining:
+
+  * **SPIFFE/X.509 workload identities (SVIDs)**
+  * **sealed overlay encryption** (true end‑to‑end, multi‑hop confidentiality)
+  * **identity‑aware, secure load balancing** and **secure sticky sessions**
+
+> In short: use `open`/`gated`/`overlay` with the OSS runtime; install **Naylence Advanced Security** to access **`strict‑overlay`** and the capabilities above.
 
 ---
 
@@ -32,23 +46,32 @@ At its core, Naylence already provides a zero-trust, message-oriented backbone f
 
 Agent orchestration introduces unique risks:
 
-* Messages often cross multiple hops and administrative domains.
-* Long-running jobs and sticky sessions can span hours or days.
-* Agents may be mobile, ephemeral, or deployed in untrusted environments.
+* Messages often cross **multiple hops** and **administrative domains**.
+* Long‑running jobs and sticky sessions can span **hours or days**.
+* Agents may be **mobile, ephemeral, or untrusted** in their deployment context.
 
-Naylence Advanced Security addresses these challenges by ensuring that **security travels with the message**—not with the network perimeter. This shifts protection closer to the application and agent layer, enabling **zero-trust by design**.
+Advanced Security ensures that **security travels with the message**, not the perimeter—making zero‑trust the default posture.
 
 ---
 
 ## Use Cases
 
-* **Federated AI Agent Systems** – Secure orchestration across multiple organizations or departments.
-* **Cross-Cloud Workflows** – Durable, encrypted communication across cloud providers and trust boundaries.
-* **Regulated Environments** – Fine-grained, auditable security controls for healthcare, finance, or defense.
-* **Multi-tenant Platforms** – Strong tenant isolation and policy-based routing in agent platforms.
+* **Federated AI Agent Systems** — Secure orchestration across departments or partner orgs.
+* **Cross‑Cloud Workflows** — Durable, encrypted communication across cloud providers and trust boundaries.
+* **Regulated Environments** — Fine‑grained, auditable controls for healthcare, finance, or defense.
+* **Multi‑tenant Platforms** — Strong tenant isolation and policy‑based routing in agent platforms.
+
+---
+
+## Links
+
+* **Advanced Security (this repo):** [https://github.com/naylence/naylence-advanced-security-python](https://github.com/naylence/naylence-advanced-security-python)
+* **Runtime (OSS profiles & fabric):** [https://github.com/naylence/naylence-runtime-python](https://github.com/naylence/naylence-runtime-python)
+* **Agent SDK (build agents/clients):** [https://github.com/naylence/naylence-agent-sdk-python](https://github.com/naylence/naylence-agent-sdk-python)
+* **Examples (runnable demos):** [https://github.com/naylence/naylence-examples-python](https://github.com/naylence/naylence-examples-python)
 
 ---
 
 ## License
 
-[Business Source License (BSL)](./LICENSE). See the LICENSE file for full terms.
+This package is distributed under the **Business Source License (BSL)**. See [`LICENSE`](./LICENSE) for full terms.
