@@ -1021,14 +1021,14 @@ pydantic = ">=2.11.4,<3.0.0"
 
 [[package]]
 name = "naylence-runtime"
-version = "0.1.85"
+version = "0.1.86"
 description = "Naylence Runtime"
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
 files = [
-    {file = "naylence_runtime-0.1.85-py3-none-any.whl", hash = "sha256:c9d16fc85cd2904886847a4689cfe509881eb811b7334dd4a1b694d913904df8"},
-    {file = "naylence_runtime-0.1.85.tar.gz", hash = "sha256:47efc3db79b44ba0745250ca4b50a22e96fa1594da490ad218f0a09f5d5fa263"},
+    {file = "naylence_runtime-0.1.86-py3-none-any.whl", hash = "sha256:a110f0dbb1fc859cdd93afa415b0522048aabbf9060ef6d9e4733431757e1744"},
+    {file = "naylence_runtime-0.1.86.tar.gz", hash = "sha256:d95dd900591207692d17d3dc8f902a69c98486b9efe56795c46a804ec0ad9f37"},
 ]
 
 [package.dependencies]
@@ -1043,11 +1043,6 @@ pyyaml = ">=6.0.2,<7.0.0"
 structlog = ">=25.3.0,<26.0.0"
 uvicorn = ">=0.35.0,<0.36.0"
 websockets = ">=15.0.1,<16.0.0"
-
-[package.source]
-type = "legacy"
-url = "https://test.pypi.org/simple"
-reference = "testpypi"
 
 [[package]]
 name = "nodeenv"
@@ -2167,4 +2162,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "85b903d699cd8030c4647abec91e3fb2a99711f185a636d5d6973028706731e4"
+content-hash = "d3221f95061de21e9f45374eb1879b74f93c2dfbe3a81fb57349a8897f473c39"
