@@ -17,7 +17,7 @@ packages = [
 [tool.poetry.dependencies]
 cryptography = { version = "^45.0.2", optional = false }
 pyjwt = { version = "^2.10.1", optional = false }
-naylence-runtime = "^0.1.83"
+naylence-runtime = "^0.1.85"
 
 
 [tool.poetry.group.dev.dependencies]

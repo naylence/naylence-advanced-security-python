@@ -985,19 +985,24 @@ files = [
 
 [[package]]
 name = "naylence-core"
-version = "0.1.17"
+version = "0.1.18"
 description = "Naylence Core"
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
 files = [
-    {file = "naylence_core-0.1.17-py3-none-any.whl", hash = "sha256:399aee60ab16034ec06464082a557872a7d93ebe45eadf63ac5dba75dc941a75"},
-    {file = "naylence_core-0.1.17.tar.gz", hash = "sha256:13bc6c730b6f9b49c106dd2ca0f6809fd9ec1ec4fcabd294d1268b5778b6871c"},
+    {file = "naylence_core-0.1.18-py3-none-any.whl", hash = "sha256:73bed8abfbe0b86e33d5328a2592ee5957603c625c019a65dd0fc4ee38030910"},
+    {file = "naylence_core-0.1.18.tar.gz", hash = "sha256:2ba105188083a51deb763df2629b683aa0fa53b27bfe0a7bc1dce3a64db4a1b2"},
 ]
 
 [package.dependencies]
 naylence-factory = ">=0.1.3,<0.2.0"
 pydantic = ">=2.11.4,<3.0.0"
+
+[package.source]
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "testpypi"
 
 [[package]]
 name = "naylence-factory"
@@ -1016,14 +1021,14 @@ pydantic = ">=2.11.4,<3.0.0"
 
 [[package]]
 name = "naylence-runtime"
-version = "0.1.83"
+version = "0.1.85"
 description = "Naylence Runtime"
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
 files = [
-    {file = "naylence_runtime-0.1.83-py3-none-any.whl", hash = "sha256:49f12b5826998d8878f70abfa8823ee0f29a3f5a8198794561d0ebd2503579fc"},
-    {file = "naylence_runtime-0.1.83.tar.gz", hash = "sha256:0b5fd7f27493524e29f56d6e613c7350f2edfe24543dcab2027e06f4d7208dc8"},
+    {file = "naylence_runtime-0.1.85-py3-none-any.whl", hash = "sha256:c9d16fc85cd2904886847a4689cfe509881eb811b7334dd4a1b694d913904df8"},
+    {file = "naylence_runtime-0.1.85.tar.gz", hash = "sha256:47efc3db79b44ba0745250ca4b50a22e96fa1594da490ad218f0a09f5d5fa263"},
 ]
 
 [package.dependencies]
@@ -1031,13 +1036,18 @@ aiohttp = ">=3.11.18,<4.0.0"
 cryptography = ">=45.0.6,<46.0.0"
 fastapi = ">=0.116.1,<0.117.0"
 httpx = ">=0.28.1,<0.29.0"
-naylence-core = ">=0.1.17,<0.2.0"
+naylence-core = ">=0.1.18,<0.2.0"
 pyjwt = ">=2.10.1,<3.0.0"
 python-multipart = ">=0.0.20,<0.0.21"
 pyyaml = ">=6.0.2,<7.0.0"
 structlog = ">=25.3.0,<26.0.0"
 uvicorn = ">=0.35.0,<0.36.0"
 websockets = ">=15.0.1,<16.0.0"
+
+[package.source]
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "testpypi"
 
 [[package]]
 name = "nodeenv"
@@ -1422,14 +1432,14 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pyright"
-version = "1.1.404"
+version = "1.1.405"
 description = "Command line wrapper for pyright"
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "pyright-1.1.404-py3-none-any.whl", hash = "sha256:c7b7ff1fdb7219c643079e4c3e7d4125f0dafcc19d253b47e898d130ea426419"},
-    {file = "pyright-1.1.404.tar.gz", hash = "sha256:455e881a558ca6be9ecca0b30ce08aa78343ecc031d37a198ffa9a7a1abeb63e"},
+    {file = "pyright-1.1.405-py3-none-any.whl", hash = "sha256:a2cb13700b5508ce8e5d4546034cb7ea4aedb60215c6c33f56cec7f53996035a"},
+    {file = "pyright-1.1.405.tar.gz", hash = "sha256:5c2a30e1037af27eb463a1cc0b9f6d65fec48478ccf092c1ac28385a15c55763"},
 ]
 
 [package.dependencies]
@@ -2157,4 +2167,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "a2fea104ea4e5ea59263d1e9cd366d67cc39f550faf1f6aa28cfc7cd3c911660"
+content-hash = "85b903d699cd8030c4647abec91e3fb2a99711f185a636d5d6973028706731e4"
