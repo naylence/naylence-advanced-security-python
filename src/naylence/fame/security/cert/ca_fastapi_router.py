@@ -47,7 +47,7 @@ def create_ca_router(
         if ca_service.authorizer:
             auth_header = request.headers.get("authorization", "")
 
-            auth_result = await ca_service.authorizer.authenticate(expected_audience, auth_header)
+            auth_result = await ca_service.authorizer.authenticate(auth_header)
             if auth_result is None:
                 logger.warning(
                     "client_authentication_failed",
