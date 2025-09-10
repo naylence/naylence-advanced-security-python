@@ -1,3 +1,5 @@
+[![Join our Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue?logo=discord)](https://discord.gg/nwZAeqdv7y)
+
 # Naylence Advanced Security
 
 **Naylence Advanced Security** is a high‑assurance extension for the [Naylence Agentic Fabric](https://github.com/naylence) that delivers advanced cryptographic and policy‑driven protections for multi‑agent systems. It is designed for environments where agents, services, and organizations must interact across trust domains while preserving **confidentiality, integrity, durability, and policy compliance**.
