@@ -52,12 +52,12 @@ async def test_root_node_ca_certificate_flow():
             mock_ensure_cert.return_value = True  # Simulate successful certificate provisioning
 
             # Create a root node with certificate manager
+            from naylence.fame.delivery.default_delivery_tracker_factory import (
+                DefaultDeliveryTrackerFactory,
+            )
             from naylence.fame.node.node_meta import NodeMeta
             from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
             from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-            from naylence.fame.tracking.default_delivery_tracker_factory import (
-                DefaultDeliveryTrackerFactory,
-            )
 
             storage_provider = InMemoryStorageProvider()
             node_meta_store = InMemoryKVStore(NodeMeta)
@@ -250,10 +250,10 @@ async def test_root_node_raw_key_no_certificate_flow():
         print(f"   ✓ Certificate manager exists: {security_manager.certificate_manager is not None}")
 
         # Create a root node without certificate manager
+        from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
         from naylence.fame.node.node_meta import NodeMeta
         from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-        from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore(NodeMeta)

@@ -1,5 +1,6 @@
 import pytest
 
+from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 from naylence.fame.node.node import FameNode
 from naylence.fame.node.node_meta import NodeMeta
 from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
@@ -9,7 +10,6 @@ from naylence.fame.security.security_manager_factory import SecurityManagerFacto
 from naylence.fame.sentinel.sentinel import Sentinel
 from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
 from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 class TestPolicyDrivenSecurityArchitecture:
@@ -97,8 +97,8 @@ class TestPolicyDrivenSecurityArchitecture:
         """Test that FameNode delegates all security setup to SecurityManager."""
         # Create node with security bundle
         security = await SecurityManagerFactory.create_security_manager(DefaultSecurityPolicy())
+        from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-        from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)
@@ -139,8 +139,8 @@ class TestPolicyDrivenSecurityArchitecture:
 
         security_with_km = await SecurityManagerFactory.create_security_manager(policy_with_km)
 
+        from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
         from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-        from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
         storage_provider = InMemoryStorageProvider()
         node_meta_store = InMemoryKVStore[NodeMeta](NodeMeta)

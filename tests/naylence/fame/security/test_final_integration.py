@@ -16,6 +16,7 @@ from naylence.fame.core.protocol.frames import (
     SecureAcceptFrame,
     SecureOpenFrame,
 )
+from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 from naylence.fame.node.node_meta import NodeMeta
 from naylence.fame.security.encryption.composite_encryption_manager import CompositeEncryptionManager
 from naylence.fame.security.encryption.encryption_manager import EncryptionStatus
@@ -28,7 +29,6 @@ from naylence.fame.security.policy.security_policy import (
     SigningConfig,
 )
 from naylence.fame.storage.in_memory_key_value_store import InMemoryKVStore
-from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 class MockSecureChannelManager:

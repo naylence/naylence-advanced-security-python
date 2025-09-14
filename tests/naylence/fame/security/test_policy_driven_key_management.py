@@ -38,8 +38,8 @@ async def test_policy_driven_key_management():
     assert signing_security.policy is policy_with_signing
 
     # Test 3: FameNode uses key_manager from SecurityManager when it exists
+    from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
 
@@ -93,8 +93,8 @@ async def test_node_security_key_manager_priority():
     security_with_key_manager = await SecurityManagerFactory.create_security_manager(policy_with_km)
     assert security_with_key_manager.key_manager is not None
 
+    from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
 

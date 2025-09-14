@@ -5,6 +5,7 @@ Test the SecurityPolicy integration with FameNode.
 import pytest
 
 from naylence.fame.core import FameEnvelope
+from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 from naylence.fame.node.node import FameNode
 from naylence.fame.security.policy import (
     DefaultSecurityPolicy,
@@ -15,7 +16,6 @@ from naylence.fame.security.policy.security_policy import (
     SecurityPolicy,
 )
 from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 class CustomSecurityPolicy(SecurityPolicy):

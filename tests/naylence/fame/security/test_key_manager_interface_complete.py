@@ -3,12 +3,12 @@ from unittest.mock import Mock
 
 import pytest
 
+from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 from naylence.fame.security.keys.in_memory_key_store import InMemoryKeyStore
 from naylence.fame.security.keys.key_manager import KeyManager
 from naylence.fame.security.keys.x5c_key_manager import X5CKeyManager
 from naylence.fame.sentinel.key_frame_handler import KeyFrameHandler
 from naylence.fame.sentinel.sentinel import Sentinel
-from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
 
 @pytest.mark.asyncio

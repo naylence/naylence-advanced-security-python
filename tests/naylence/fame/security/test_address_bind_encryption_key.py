@@ -38,8 +38,8 @@ async def test_encryption_key_id_in_address_bind():
     binding_store = InMemoryKVStore(BindingStoreEntry)
 
     # Create a delivery tracker for the binding manager
+    from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
     delivery_tracker_factory = DefaultDeliveryTrackerFactory()

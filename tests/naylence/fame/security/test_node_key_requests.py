@@ -37,8 +37,8 @@ async def test_node_with_key_requests():
     node_security = await SecurityManagerFactory.create_security_manager(
         encryption_manager=encryption_manager
     )
+    from naylence.fame.delivery.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
     from naylence.fame.storage.in_memory_storage_provider import InMemoryStorageProvider
-    from naylence.fame.tracking.default_delivery_tracker_factory import DefaultDeliveryTrackerFactory
 
     storage_provider = InMemoryStorageProvider()
 
