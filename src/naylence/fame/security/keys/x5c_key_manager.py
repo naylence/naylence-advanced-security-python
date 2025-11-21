@@ -206,7 +206,24 @@ class X5CKeyManager(KeyManager, TaskSpawner):
                 total_keys=len(keys),
                 rejected_count=rejected_count,
             )
+            logger.debug(
+                "no_valid_keys_after_validation",
+                announced_kids=[key.get("kid") for key in keys],
+                announced_uses=[key.get("use") for key in keys],
+                physical_path=physical_path,
+                origin=origin,
+                sid=sid,
+            )
             return
+
+        logger.debug(
+            "validated_keys_for_announce",
+            validated_kids=[key.get("kid") for key in valid_keys],
+            validated_uses=[key.get("use") for key in valid_keys],
+            physical_path=physical_path,
+            origin=origin,
+            sid=sid,
+        )
 
         logger.debug(
             "adding_keys",
@@ -260,6 +277,76 @@ class X5CKeyManager(KeyManager, TaskSpawner):
                     f"Frame physical path {normalized_frame_path} "
                     f"does not match expected prefix {expected_path_prefix}"
                 )
+
+        # Remove old encryption keys before adding new ones to handle key rotation
+        # This ensures clients/agents can reconnect with fresh encryption keys
+        # Keys may be stored under multiple paths (physical path AND logical addresses)
+        # so we need to remove them from ALL paths, not just the physical path
+        has_encryption_keys = any(key.get("use") == "enc" for key in valid_keys)
+        if has_encryption_keys:
+            logger.debug(
+                "checking_for_old_encryption_keys_to_remove",
+                physical_path=physical_path,
+                origin=origin,
+                new_enc_keys=[k["kid"] for k in valid_keys if k.get("use") == "enc"],
+            )
+            try:
+                # Get all encryption keys across ALL paths to find stale keys
+                # This is necessary because keys can be stored under multiple paths:
+                # 1. Physical path: /system_id/node_id
+                # 2. Logical addresses: participant@/system_id/node_id (e.g., __rpc__@/...)
+                all_keys_by_path = await self._key_store.get_keys_grouped_by_path()
+
+                # Find all encryption keys that match our physical path or related logical addresses
+                # Related logical addresses are those that end with the physical path
+                old_enc_keys_to_check = []
+                paths_with_old_keys = []
+
+                for path, keys_at_path in all_keys_by_path.items():
+                    # Match if path equals physical_path OR ends with physical_path (logical address case)
+                    if path == physical_path or path.endswith(f"@{physical_path}"):
+                        enc_keys_at_path = [k for k in keys_at_path if k.get("use") == "enc"]
+                        if enc_keys_at_path:
+                            old_enc_keys_to_check.extend(enc_keys_at_path)
+                            paths_with_old_keys.append(path)
+
+                logger.debug(
+                    "found_existing_encryption_keys_across_paths",
+                    physical_path=physical_path,
+                    paths_checked=paths_with_old_keys,
+                    existing_enc_key_ids=[k["kid"] for k in old_enc_keys_to_check],
+                )
+
+                if old_enc_keys_to_check:
+                    # Get the new encryption key IDs being added
+                    new_enc_key_ids = {k["kid"] for k in valid_keys if k.get("use") == "enc"}
+                    # Only remove old encryption keys that are not in the new set
+                    # Use a set to deduplicate in case same key appears under multiple paths
+                    keys_to_remove = list(
+                        {k["kid"] for k in old_enc_keys_to_check if k["kid"] not in new_enc_key_ids}
+                    )
+
+                    if keys_to_remove:
+                        logger.info(
+                            "removing_old_encryption_keys_for_key_rotation",
+                            physical_path=physical_path,
+                            paths_with_old_keys=paths_with_old_keys,
+                            old_key_ids=keys_to_remove,
+                            new_key_ids=list(new_enc_key_ids),
+                            origin=origin,
+                        )
+                        for kid in keys_to_remove:
+                            # remove_key() removes the key from ALL paths where it's stored
+                            await self._key_store.remove_key(kid)
+                            logger.debug("removed_old_encryption_key_from_all_paths", kid=kid)
+            except Exception as e:
+                logger.warning(
+                    "failed_to_remove_old_encryption_keys",
+                    physical_path=physical_path,
+                    error=str(e),
+                    origin=origin,
+                )
+                # Continue with adding new keys even if removal fails
 
         await self._key_store.add_keys(valid_keys, physical_path=physical_path)
 

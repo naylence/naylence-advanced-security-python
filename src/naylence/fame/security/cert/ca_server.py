@@ -23,8 +23,13 @@ async def lifespan(app: FastAPI):
     yield
 
 
+def create_app() -> FastAPI:
+    """Create and return a FastAPI application with CA service."""
+    return FastAPI(lifespan=lifespan)
+
+
 if __name__ == "__main__":
-    app = FastAPI(lifespan=lifespan)
+    app = create_app()
     host = os.getenv(ENV_VAR_FAME_APP_HOST, "0.0.0.0")
     port = int(os.getenv(ENV_VAR_FAME_APP_PORT, 8091))
     uvicorn.run(app, host=host, port=port, log_level="info")

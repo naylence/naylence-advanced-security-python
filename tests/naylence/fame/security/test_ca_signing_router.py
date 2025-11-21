@@ -351,7 +351,7 @@ class TestCASigningRouter:
         router = create_ca_router(ca_service=ca_service)
         assert router is not None
         assert router.prefix == "/fame/v1/ca"
-        assert len(router.routes) == 2  # /sign and /health endpoints
+        assert len(router.routes) == 3  # /sign, /health, /.well-known endpoints
 
     @pytest.mark.asyncio
     async def test_create_router_custom_service(self, test_ca_setup):

@@ -21,3 +21,29 @@ class CertificateIssuanceResponse(BaseModel):
     certificate_pem: str = Field(..., description="Issued certificate in PEM format")
     certificate_chain_pem: Optional[str] = Field(None, description="Full certificate chain in PEM format")
     expires_at: str = Field(..., description="Certificate expiration time in ISO format")
+
+
+class TrustBundleRoot(BaseModel):
+    """Trust bundle certificate entry."""
+
+    pem: str = Field(..., description="Certificate in PEM format")
+    kid: Optional[str] = Field(None, description="Optional key identifier", alias="kid")
+    not_before: Optional[str] = Field(None, description="Optional notBefore timestamp", alias="notBefore")
+    not_after: Optional[str] = Field(None, description="Optional notAfter timestamp", alias="notAfter")
+
+    model_config = {"populate_by_name": True}
+
+
+class TrustBundleDocument(BaseModel):
+    """Trust bundle document served by the CA."""
+
+    version: int = Field(
+        ..., description="Monotonic version number that changes when bundle contents rotate"
+    )
+    issued_at: str = Field(..., description="Time the bundle was generated", alias="issuedAt")
+    valid_until: Optional[str] = Field(
+        None, description="Earliest expiration among the bundled roots", alias="validUntil"
+    )
+    roots: List[TrustBundleRoot] = Field(..., description="Trust anchors")
+
+    model_config = {"populate_by_name": True}

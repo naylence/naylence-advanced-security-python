@@ -4,7 +4,12 @@ from typing import List, Optional
 from naylence.fame.security.auth.authorizer import Authorizer  # Add this import (adjust path if needed)
 from naylence.fame.security.cert.ca_fastapi_router import logger
 from naylence.fame.security.cert.ca_service import CAService
-from naylence.fame.security.cert.fastapi_model import CertificateIssuanceResponse, CertificateSigningRequest
+from naylence.fame.security.cert.fastapi_model import (
+    CertificateIssuanceResponse,
+    CertificateSigningRequest,
+    TrustBundleDocument,
+    TrustBundleRoot,
+)
 
 
 class DefaultCAService(CAService):
@@ -320,3 +325,69 @@ class DefaultCAService(CAService):
                 exc_info=True,
             )
             raise
+
+    async def get_trust_bundle(self) -> Optional[TrustBundleDocument]:
+        """
+        Retrieve the trust bundle containing root certificates.
+
+        Returns:
+            TrustBundleDocument with versioned trust anchors, or None if unavailable
+        """
+        from datetime import datetime
+
+        from cryptography import x509
+
+        try:
+            # Get CA credentials
+            (
+                ca_cert_pem,
+                ca_key_pem,
+                intermediate_chain_pem,
+                signing_cert_pem,
+                signing_key_pem,
+            ) = self._get_ca_credentials()
+
+            # Parse root certificate
+            root_cert = x509.load_pem_x509_certificate(ca_cert_pem.encode())
+
+            # Extract certificate validity dates in ISO format with .000Z suffix (matching TS)
+            not_before = root_cert.not_valid_before_utc.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            not_after = root_cert.not_valid_after_utc.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+            # Build trust bundle with root certificate
+            roots = [
+                TrustBundleRoot(
+                    pem=ca_cert_pem,
+                    kid=None,  # Could extract from cert subject key identifier if needed
+                    not_before=not_before,
+                    not_after=not_after,
+                )
+            ]
+
+            # Compute version from root PEM hash (matching TS implementation)
+            import hashlib
+
+            serialized = "\n".join(root.pem for root in roots)
+            digest = hashlib.sha256(serialized.encode()).hexdigest()
+            version_hex = digest[:12]  # First 12 hex chars
+            version = int(version_hex, 16)
+
+            # Create trust bundle document with ISO timestamp matching TS format
+            from datetime import datetime, timezone
+
+            issued_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            trust_bundle = TrustBundleDocument(
+                version=version,
+                issued_at=issued_at,
+                valid_until=not_after,  # Valid until root expires
+                roots=roots,
+            )
+
+            logger.debug(
+                "trust_bundle_generated", root_count=len(roots), valid_until=not_after, version=version
+            )
+            return trust_bundle
+
+        except Exception as e:
+            logger.error("trust_bundle_generation_failed", error=str(e), exc_info=True)
+            return None
