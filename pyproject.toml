@@ -1,6 +1,6 @@
 [project]
 name = "naylence-advanced-security"
-version = "0.3.2"
+version = "0.3.3"
 description = "Naylence Advanced Security"
 authors = [
     {name = "naylencedev@gmail.com"}

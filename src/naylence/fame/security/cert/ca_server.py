@@ -2,7 +2,7 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request, Response
 
 from naylence.fame.security.cert.ca_service_factory import CAServiceFactory
 from naylence.fame.util.logging import enable_logging
@@ -20,6 +20,45 @@ enable_logging(log_level=os.getenv(ENV_VAR_LOG_LEVEL, "warning"))
 async def lifespan(app: FastAPI):
     ca_service = await CAServiceFactory.create_ca_service()
     app.include_router(create_ca_router(ca_service=ca_service))
+
+    # Register trust bundle endpoint at app root level (not under router prefix)
+    @app.get("/.well-known/naylence/trust-bundle.json")
+    async def get_trust_bundle(request: Request):
+        """Serve the trust bundle at the well-known location."""
+        import hashlib
+
+        bundle = await ca_service.get_trust_bundle()
+        if bundle is None:
+            raise HTTPException(status_code=404, detail={"error": "trust_bundle_unavailable"})
+
+        # Serialize with camelCase field names and exclude None values
+        payload = bundle.model_dump_json(by_alias=True, exclude_none=True)
+        etag_hash = hashlib.sha256(payload.encode()).hexdigest()[:16]
+        etag = f'"{etag_hash}"'
+
+        # Check if client has cached version
+        request_etag = request.headers.get("if-none-match")
+        if request_etag:
+            clean_request_etag = request_etag.replace("W/", "").strip('"')
+            clean_etag = etag.strip('"')
+            if clean_request_etag == clean_etag:
+                return Response(
+                    status_code=304,
+                    headers={
+                        "ETag": etag,
+                        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+                    },
+                )
+
+        return Response(
+            content=payload,
+            media_type="application/json",
+            headers={
+                "ETag": etag,
+                "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+            },
+        )
+
     yield
 
 
