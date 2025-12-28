@@ -4,7 +4,9 @@ Factory for creating AdvancedAuthorizationPolicy instances.
 
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import Any, Optional
+
+from pydantic import ConfigDict, Field
 
 from naylence.fame.expr.limits import ExpressionLimits
 from naylence.fame.security.auth.policy.authorization_policy import (
@@ -15,20 +17,32 @@ from naylence.fame.security.auth.policy.authorization_policy_definition import (
 )
 from naylence.fame.security.auth.policy.authorization_policy_factory import (
     AUTHORIZATION_POLICY_FACTORY_BASE_TYPE,
+    AuthorizationPolicyConfig,
     AuthorizationPolicyFactory,
 )
 
 
-class AdvancedAuthorizationPolicyConfig(TypedDict, total=False):
+class AdvancedAuthorizationPolicyConfig(AuthorizationPolicyConfig):
     """Configuration for creating an AdvancedAuthorizationPolicy via factory."""
 
-    type: str  # "AdvancedAuthorizationPolicy"
-    policy_definition: AuthorizationPolicyDefinition | dict[str, Any]
-    policyDefinition: AuthorizationPolicyDefinition | dict[str, Any]  # camelCase alias
-    warn_on_unknown_fields: bool
-    warnOnUnknownFields: bool  # camelCase alias
-    expression_limits: ExpressionLimits | dict[str, Any]
-    expressionLimits: ExpressionLimits | dict[str, Any]  # camelCase alias
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    type: str = "AdvancedAuthorizationPolicy"
+
+    # The policy definition to evaluate - can be dict or Pydantic model
+    policy_definition: AuthorizationPolicyDefinition | dict[str, Any] | None = Field(
+        default=None, alias="policyDefinition"
+    )
+
+    # Whether to log warnings for unknown fields (default: True)
+    warn_on_unknown_fields: bool = Field(
+        default=True, alias="warnOnUnknownFields"
+    )
+
+    # Expression limits for the policy
+    expression_limits: ExpressionLimits | dict[str, Any] | None = Field(
+        default=None, alias="expressionLimits"
+    )
 
 
 # Factory metadata for registration
@@ -39,47 +53,49 @@ FACTORY_META = {
 
 
 def _normalize_config(
-    config: Optional[AdvancedAuthorizationPolicyConfig | dict[str, Any]],
+    config: AdvancedAuthorizationPolicyConfig | dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """
-    Normalize config by supporting both camelCase and snake_case.
-
-    Args:
-        config: The configuration dictionary
-
-    Returns:
-        Normalized configuration
-
-    Raises:
-        ValueError: If required fields are missing or invalid
-    """
-    if not config:
+    """Normalize configuration for AdvancedAuthorizationPolicy."""
+    if config is None:
         raise ValueError(
             "AdvancedAuthorizationPolicyFactory requires a configuration "
             "with a policyDefinition"
         )
 
-    # Support both camelCase and snake_case for policyDefinition
-    policy_definition = config.get("policyDefinition") or config.get(
-        "policy_definition"
+    if isinstance(config, AdvancedAuthorizationPolicyConfig):
+        candidate = config.model_dump(by_alias=False)
+    else:
+        candidate = config
+
+    # Support both snake_case and camelCase for policy_definition
+    policy_definition = candidate.get("policy_definition") or candidate.get(
+        "policyDefinition"
     )
-    if not policy_definition or not isinstance(policy_definition, dict):
+
+    if not policy_definition:
         raise ValueError(
             "AdvancedAuthorizationPolicyConfig requires a policyDefinition object"
         )
 
-    # Support both camelCase and snake_case for warnOnUnknownFields
-    warn_on_unknown_fields = config.get("warnOnUnknownFields")
-    if warn_on_unknown_fields is None:
-        warn_on_unknown_fields = config.get("warn_on_unknown_fields")
+    # policy_definition can be a dict or already an AuthorizationPolicyDefinition
+    if not isinstance(policy_definition, dict | AuthorizationPolicyDefinition):
+        raise ValueError(
+            "AdvancedAuthorizationPolicyConfig requires a policyDefinition object"
+        )
+
+    # Support both snake_case and camelCase for warn_on_unknown_fields
+    warn_on_unknown_fields = candidate.get(
+        "warn_on_unknown_fields", candidate.get("warnOnUnknownFields")
+    )
+
     if warn_on_unknown_fields is not None and not isinstance(
         warn_on_unknown_fields, bool
     ):
         raise ValueError("warnOnUnknownFields must be a boolean")
 
-    # Support both camelCase and snake_case for expressionLimits
-    expression_limits = config.get("expressionLimits") or config.get(
-        "expression_limits"
+    # Support both snake_case and camelCase for expression_limits
+    expression_limits = candidate.get(
+        "expression_limits", candidate.get("expressionLimits")
     )
 
     return {
@@ -91,14 +107,17 @@ def _normalize_config(
     }
 
 
-class AdvancedAuthorizationPolicyFactory(AuthorizationPolicyFactory):
+class AdvancedAuthorizationPolicyFactory(
+    AuthorizationPolicyFactory[AdvancedAuthorizationPolicyConfig]
+):
     """Factory for creating AdvancedAuthorizationPolicy instances."""
 
     type: str = "AdvancedAuthorizationPolicy"
 
     async def create(
         self,
-        config: Optional[AdvancedAuthorizationPolicyConfig | dict[str, Any]] = None,
+        config: AdvancedAuthorizationPolicyConfig | dict[str, Any] | None = None,
+        **factory_args: Any,
     ) -> AuthorizationPolicy:
         """
         Create an AdvancedAuthorizationPolicy from the given configuration.

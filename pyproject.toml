@@ -1,6 +1,6 @@
 [project]
 name = "naylence-advanced-security"
-version = "0.4.0"
+version = "0.4.1"
 description = "Naylence Advanced Security"
 authors = [
     {name = "naylencedev@gmail.com"}
@@ -17,7 +17,7 @@ packages = [
 [tool.poetry.dependencies]
 cryptography = { version = "^45.0.2", optional = false }
 pyjwt = { version = "^2.10.1", optional = false }
-naylence-runtime = "^0.4.6"
+naylence-runtime = "^0.4.7"
 
 
 [tool.poetry.group.dev.dependencies]
