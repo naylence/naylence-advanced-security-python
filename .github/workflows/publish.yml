@@ -11,6 +11,14 @@ on:
         default: 'testpypi'
         type: choice
         options: [testpypi, pypi]
+  workflow_run:
+    workflows: ["Test"]
+    types:
+      - completed
+    branches:
+      - main
+      - develop
+      - public-main
 
 permissions:
   contents: read
@@ -71,8 +79,11 @@ jobs:
           packages-dir: dist
 
   publish-pypi:
-    # Run on release, or on dispatch with target == pypi
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
+    # Run on release, on dispatch with target == pypi, or when tests pass on a tag
+    if: |
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v'))
     needs: build
     runs-on: ubuntu-latest
     environment: pypi            # Environment for PyPI OIDC
