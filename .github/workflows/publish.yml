@@ -15,10 +15,6 @@ on:
     workflows: ["Test"]
     types:
       - completed
-    branches:
-      - main
-      - develop
-      - public-main
 
 permissions:
   contents: read
