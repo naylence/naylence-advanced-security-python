@@ -47,7 +47,11 @@ from naylence.fame.security.auth.policy.scope_matcher import (
     compile_glob_only_scope_requirement,
 )
 
-from .expr_builtins import create_auth_function_registry
+from .expr_builtins import (
+    SecurityBindings,
+    create_auth_function_registry,
+    create_security_bindings,
+)
 
 logger = logging.getLogger(
     "naylence.fame.security.auth.policy.advanced_authorization_policy"
@@ -189,8 +193,17 @@ def _extract_claims(
     return {}
 
 
-def _create_envelope_bindings(envelope: FameEnvelope) -> dict[str, ExprValue]:
-    """Create a safe envelope subset for expression bindings."""
+def _create_envelope_bindings(
+    envelope: FameEnvelope,
+) -> tuple[dict[str, ExprValue], SecurityBindings]:
+    """
+    Create a safe envelope subset for expression bindings.
+
+    Returns:
+        A tuple of (bindings, security_bindings) where bindings is the envelope
+        data for expression evaluation and security_bindings is the normalized
+        security metadata for security builtins.
+    """
     frame = getattr(envelope, "frame", None)
     frame_type: Optional[str] = None
     if frame is not None:
@@ -209,14 +222,62 @@ def _create_envelope_bindings(envelope: FameEnvelope) -> dict[str, ExprValue]:
     if flow_id is None:
         flow_id = getattr(envelope, "flowId", None)
 
-    return {
+    # Extract sid (source identity hash)
+    sid = getattr(envelope, "sid", None)
+
+    # Extract sec header for security bindings
+    sec = getattr(envelope, "sec", None)
+    sec_dict: Optional[dict[str, Any]] = None
+    if sec is not None:
+        if isinstance(sec, dict):
+            sec_dict = sec
+        elif hasattr(sec, "__dict__"):
+            sec_dict = {
+                "sig": getattr(sec, "sig", None),
+                "enc": getattr(sec, "enc", None),
+            }
+            # Convert sig/enc objects to dicts if needed
+            if sec_dict["sig"] is not None and not isinstance(sec_dict["sig"], dict):
+                sig_obj = sec_dict["sig"]
+                sec_dict["sig"] = {
+                    "alg": getattr(sig_obj, "alg", None),
+                    "kid": getattr(sig_obj, "kid", None),
+                }
+            if sec_dict["enc"] is not None and not isinstance(sec_dict["enc"], dict):
+                enc_obj = sec_dict["enc"]
+                sec_dict["enc"] = {
+                    "alg": getattr(enc_obj, "alg", None),
+                    "kid": getattr(enc_obj, "kid", None),
+                }
+
+    # Create security bindings from sec header
+    security_bindings = create_security_bindings(sec_dict)
+
+    # Build sec object for envelope bindings (exposes metadata only, not val)
+    sec_binding: dict[str, ExprValue] = {}
+    if security_bindings["sig"]["present"]:
+        sec_binding["sig"] = {
+            "kid": security_bindings["sig"]["kid"],
+        }
+    if security_bindings["enc"]["present"]:
+        sec_binding["enc"] = {
+            "alg": security_bindings["enc"]["alg"],
+            "kid": security_bindings["enc"]["kid"],
+            "level": security_bindings["enc"]["level"],
+        }
+
+    bindings: dict[str, ExprValue] = {
         "id": envelope_id,
         "traceId": trace_id,
         "corrId": corr_id,
         "flowId": flow_id,
         "to": _extract_address(envelope),
         "frame": {"type": frame_type},
+        "sid": sid,
+        "sec": sec_binding if sec_binding else None,
     }
+
+    return bindings, security_bindings
 
 
 def _create_delivery_bindings(
@@ -371,6 +432,7 @@ class AdvancedAuthorizationPolicy(AuthorizationPolicy):
 
         # Lazy initialization of expression bindings and function registry
         expression_bindings: Optional[dict[str, ExprValue]] = None
+        security_bindings: Optional[SecurityBindings] = None
         function_registry: Optional[FunctionRegistry] = None
 
         evaluation_trace: list[AuthorizationEvaluationStep] = []
@@ -464,9 +526,12 @@ class AdvancedAuthorizationPolicy(AuthorizationPolicy):
                 # Lazy initialization of expression bindings
                 if expression_bindings is None:
                     now = datetime.now(timezone.utc)
+                    envelope_bindings, security_bindings = _create_envelope_bindings(
+                        envelope
+                    )
                     expression_bindings = {
                         "claims": _extract_claims(context),
-                        "envelope": _create_envelope_bindings(envelope),
+                        "envelope": envelope_bindings,
                         "delivery": _create_delivery_bindings(context, resolved_action),
                         "node": _create_node_bindings(node),
                         "time": {
@@ -476,7 +541,21 @@ class AdvancedAuthorizationPolicy(AuthorizationPolicy):
                     }
 
                 if function_registry is None:
-                    function_registry = create_auth_function_registry(granted_scopes)
+                    # security_bindings should be set when expression_bindings is set
+                    # but provide a safe default in case of edge cases
+                    sec_bindings_for_registry = security_bindings or {
+                        "sig": {"present": False, "kid": None},
+                        "enc": {
+                            "present": False,
+                            "alg": None,
+                            "kid": None,
+                            "level": "plaintext",
+                        },
+                    }
+                    function_registry = create_auth_function_registry({
+                        "granted_scopes": granted_scopes,
+                        "security_bindings": sec_bindings_for_registry,
+                    })
 
                 eval_context = EvaluationContext(
                     bindings=expression_bindings,

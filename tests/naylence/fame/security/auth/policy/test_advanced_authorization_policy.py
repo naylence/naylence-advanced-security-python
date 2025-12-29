@@ -25,6 +25,32 @@ class MockFrame:
 
 
 @dataclass
+class MockSignatureHeader:
+    """Mock signature header."""
+
+    alg: Optional[str] = None
+    kid: Optional[str] = None
+    val: Optional[str] = None
+
+
+@dataclass
+class MockEncryptionHeader:
+    """Mock encryption header."""
+
+    alg: Optional[str] = None
+    kid: Optional[str] = None
+    val: Optional[str] = None
+
+
+@dataclass
+class MockSecurityHeader:
+    """Mock security header."""
+
+    sig: Optional[MockSignatureHeader] = None
+    enc: Optional[MockEncryptionHeader] = None
+
+
+@dataclass
 class MockEnvelope:
     """Mock envelope for testing."""
 
@@ -33,6 +59,8 @@ class MockEnvelope:
     from_: Optional[str] = None
     frame: Optional[MockFrame] = None
     corr_id: Optional[str] = None
+    sid: Optional[str] = None
+    sec: Optional[MockSecurityHeader] = None
 
 
 @dataclass
@@ -1077,3 +1105,523 @@ class TestNodeContextInExpressions:
         )
         assert trace is not None
         assert "false" in trace.expression.lower()
+
+
+# ============================================================
+# Security posture builtin integration tests
+# ============================================================
+
+
+class TestSecurityPostureBuiltinIntegration:
+    """Integration tests for security posture builtins in policy evaluation."""
+
+    class TestIsSignedBuiltin:
+        """Tests for is_signed() builtin in policy rules."""
+
+        @pytest.mark.asyncio
+        async def test_allows_when_envelope_is_signed(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-signature",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "is_signed()",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(sig=MockSignatureHeader(kid="key-1")),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+            assert result.matched_rule == "require-signature"
+
+        @pytest.mark.asyncio
+        async def test_denies_when_envelope_is_not_signed(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-signature",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "is_signed()",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "deny"
+
+    class TestIsEncryptedBuiltin:
+        """Tests for is_encrypted() builtin in policy rules."""
+
+        @pytest.mark.asyncio
+        async def test_allows_when_envelope_is_encrypted(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-encryption",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "is_encrypted()",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="ECDH-ES+A256GCM")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+            assert result.matched_rule == "require-encryption"
+
+        @pytest.mark.asyncio
+        async def test_denies_when_envelope_is_not_encrypted(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-encryption",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "is_encrypted()",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "deny"
+
+    class TestEncryptionLevelBuiltin:
+        """Tests for encryption_level() builtin in policy rules."""
+
+        @pytest.mark.asyncio
+        async def test_exposes_encryption_level_for_comparison(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "check-sealed",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'encryption_level() == "sealed"',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="ECDH-ES+A256GCM")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+        @pytest.mark.asyncio
+        async def test_returns_plaintext_for_no_encryption(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "check-plaintext",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'encryption_level() == "plaintext"',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+    class TestIsEncryptedAtLeastBuiltin:
+        """Tests for is_encrypted_at_least(level) builtin in policy rules."""
+
+        @pytest.mark.asyncio
+        async def test_allows_channel_for_channel_requirement(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-channel",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'is_encrypted_at_least("channel")',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="chacha20-poly1305-channel")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+        @pytest.mark.asyncio
+        async def test_allows_sealed_for_channel_requirement(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-channel",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'is_encrypted_at_least("channel")',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="ECDH-ES+A256GCM")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+        @pytest.mark.asyncio
+        async def test_denies_plaintext_for_channel_requirement(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-channel",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'is_encrypted_at_least("channel")',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "deny"
+
+        @pytest.mark.asyncio
+        async def test_denies_channel_for_sealed_requirement(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-sealed",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'is_encrypted_at_least("sealed")',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="chacha20-poly1305-channel")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "deny"
+
+        @pytest.mark.asyncio
+        async def test_denies_unknown_for_channel_conservative(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-channel",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'is_encrypted_at_least("channel")',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="custom-unknown-algo")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "deny"
+
+    class TestEnvelopeSecBindings:
+        """Tests for envelope.sec bindings in policy rules."""
+
+        @pytest.mark.asyncio
+        async def test_accesses_envelope_sec_enc_level(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "check-enc-level",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'envelope.sec.enc.level == "sealed"',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    enc=MockEncryptionHeader(alg="ECDH-ES+A256GCM")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+        @pytest.mark.asyncio
+        async def test_does_not_expose_sec_sig_val_in_bindings(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "check-no-val",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "envelope.sec.sig.val == null",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    sig=MockSignatureHeader(kid="key-1", val="secret-signature")
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            # val should be undefined/null in bindings, not the actual value
+            assert result.effect == "allow"
+
+    class TestEnvelopeSidBinding:
+        """Tests for envelope.sid binding in policy rules."""
+
+        @pytest.mark.asyncio
+        async def test_accesses_envelope_sid(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "check-sid",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'envelope.sid == "source-system-hash"',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                sid="source-system-hash",
+                frame=MockFrame(type="Data"),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+    class TestCombinedSecurityConditions:
+        """Tests for combined security conditions."""
+
+        @pytest.mark.asyncio
+        async def test_allows_when_both_signed_and_encrypted(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-both",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "is_signed() && is_encrypted()",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    sig=MockSignatureHeader(kid="sig-key"),
+                    enc=MockEncryptionHeader(alg="ECDH-ES+A256GCM"),
+                ),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "allow"
+
+        @pytest.mark.asyncio
+        async def test_denies_when_only_signed_requires_both(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "require-both",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": "is_signed() && is_encrypted()",
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(sig=MockSignatureHeader(kid="sig-key")),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            assert result.effect == "deny"
+
+        @pytest.mark.asyncio
+        async def test_combines_security_with_scope_requirements(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "secure-admin",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": (
+                            'is_signed() && is_encrypted_at_least("channel") '
+                            '&& has_scope("admin")'
+                        ),
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+                sec=MockSecurityHeader(
+                    sig=MockSignatureHeader(kid="sig-key"),
+                    enc=MockEncryptionHeader(alg="ECDH-ES+A256GCM"),
+                ),
+            )
+            context = MockDeliveryContext(
+                security=MockSecurity(
+                    authorization=MockAuthorizationContext(
+                        granted_scopes=["admin", "read"]
+                    )
+                )
+            )
+
+            result = await policy.evaluate_request(node, envelope, context, "*")
+            assert result.effect == "allow"
+
+    class TestSecurityExpressionErrorHandling:
+        """Tests for error handling in security expressions."""
+
+        @pytest.mark.asyncio
+        async def test_surfaces_error_for_invalid_is_encrypted_at_least_arg(self):
+            definition = AuthorizationPolicyDefinition(
+                version="1.0.0",
+                rules=[
+                    {
+                        "id": "invalid-level",
+                        "effect": "allow",
+                        "action": "*",
+                        "when": 'is_encrypted_at_least("invalid_level")',
+                    },
+                ],
+                default_effect="deny",
+            )
+            policy = create_policy(definition)
+            node = create_mock_node()
+            envelope = MockEnvelope(
+                id="env-1",
+                frame=MockFrame(type="Data"),
+            )
+
+            result = await policy.evaluate_request(node, envelope, None, "*")
+            # Invalid arg should cause evaluation error, rule doesn't match
+            assert result.effect == "deny"
+            trace = next(
+                (t for t in result.evaluation_trace if t.rule_id == "invalid-level"),
+                None,
+            )
+            assert trace is not None
+            assert "evaluation error" in trace.expression
