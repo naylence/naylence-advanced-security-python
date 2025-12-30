@@ -1,6 +1,6 @@
 [project]
 name = "naylence-advanced-security"
-version = "0.4.3"
+version = "0.4.4"
 description = "Naylence Advanced Security"
 authors = [
     {name = "naylencedev@gmail.com"}
@@ -17,7 +17,7 @@ packages = [
 [tool.poetry.dependencies]
 cryptography = { version = "^45.0.2", optional = false }
 pyjwt = { version = "^2.10.1", optional = false }
-naylence-runtime = "^0.4.9"
+naylence-runtime = "^0.4.10"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -153,3 +153,6 @@ AdvancedWelcomeService = "naylence.fame.welcome.advanced_welcome_service_factory
 
 [project.entry-points."naylence.AuthorizationPolicyFactory"]
 AdvancedAuthorizationPolicy = "naylence.fame.security.auth.policy.advanced_authorization_policy_factory:AdvancedAuthorizationPolicyFactory"
+
+[project.entry-points."naylence.profiles"]
+"SecurityManagerFactory:strict-overlay" = "naylence.fame.security.strict_overlay_security_profile:register_strict_overlay_profile"
