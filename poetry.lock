@@ -1132,14 +1132,14 @@ pydantic = ">=2.11.4,<3.0.0"
 
 [[package]]
 name = "naylence-runtime"
-version = "0.4.7"
+version = "0.4.9"
 description = "Naylence Runtime"
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
 files = [
-    {file = "naylence_runtime-0.4.7-py3-none-any.whl", hash = "sha256:9136cca86eccf336b6b2cd788d60cbdd9b6a125502800288199bfcdab4e02b22"},
-    {file = "naylence_runtime-0.4.7.tar.gz", hash = "sha256:5043244cdac237abfa2ba6dae2e3de28a8ad468e7bc3211916fffa42801ba21b"},
+    {file = "naylence_runtime-0.4.9-py3-none-any.whl", hash = "sha256:1d8282119163d2b1fbeede789d279916009ff520248cc7edd19032cf9b01d5bb"},
+    {file = "naylence_runtime-0.4.9.tar.gz", hash = "sha256:d29059007b5a3c20f43c338d8eccd44f99edf5cb7103e5f999cf4456dcc51ebb"},
 ]
 
 [package.dependencies]
@@ -2331,4 +2331,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "7646693aa8abc31e6994e26089f9fbdd16488e21627328ef6c1b7b2fd0e096a7"
+content-hash = "f3e2752eb8f690dff08ab7e93191cf36b1b464c9c2522c6d514fbefa85ee7b42"
